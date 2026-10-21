@@ -1,1 +1,2253 @@
-<html contenteditable>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MINER ARCADE - ONLINE & CARTOON CLAW</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+<style>
+    :root {
+        --sky-top: #1a73e8; --sky-bot: #4facfe; --card-bg: #ffffff;
+        --text-color: #2c3e50; --text-muted: #7f8c8d; --p1-col: #ff4757;
+        --p2-col: #2ed573; --gold-col: #f1c40f; --diamond-col: #00d2d3;
+        --wood-frame: #b3541e; --wood-shadow: #803810;
+        --blooket-btn-shadow: 0 6px 0 rgba(0,0,0,0.22);
+    }
+    [data-theme="dark"] {
+        --sky-top: #0f172a; --sky-bot: #1e293b; --card-bg: #1e293b;
+        --text-color: #f8fafc; --text-muted: #94a3b8; --wood-frame: #78350f; --wood-shadow: #451a03;
+    }
+    * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
+    body {
+        background: linear-gradient(180deg, var(--sky-top), var(--sky-bot));
+        font-family: 'Nunito', sans-serif; color: var(--text-color);
+        min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+        padding: 8px; transition: background 0.3s;
+    }
+    .screen { width: 100%; max-width: 740px; display: none; flex-direction: column; align-items: center; }
+    .screen.active { display: flex; }
+
+    .hero-card {
+        background: var(--card-bg); border-radius: 28px; padding: 22px 18px; width: 100%;
+        text-align: center; box-shadow: 0 14px 0 rgba(0,0,0,0.22); margin-top: 6px;
+        border: 4px solid rgba(255,255,255,0.85); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes popIn { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .game-title {
+        font-family: 'Fredoka One', cursive; font-size: 2.85rem; color: var(--gold-col);
+        text-shadow: 3px 3px 0 #b71540, 6px 6px 0 rgba(0,0,0,0.25); letter-spacing: 1.5px;
+    }
+    .game-sub { font-size: 1rem; font-weight: 800; color: var(--text-muted); margin-bottom: 14px; }
+
+    .landing-blook-showcase {
+        display: flex; justify-content: center; align-items: center; gap: 12px;
+        margin: 12px 0 18px 0; padding: 10px; background: rgba(9, 132, 227, 0.08);
+        border-radius: 22px; border: 3px dashed #74b9ff;
+    }
+    .showcase-blook-card {
+        width: 58px; height: 58px; border-radius: 16px; background: #fff;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.12); border: 2.5px solid #dcdde1;
+        display: flex; align-items: center; justify-content: center;
+        animation: floatBob 2.5s ease-in-out infinite alternate;
+    }
+    @keyframes floatBob {
+        from { transform: translateY(0px) rotate(-2deg); }
+        to { transform: translateY(-7px) rotate(3deg); }
+    }
+
+    .landing-input-box {
+        background: #f8fafc; border: 3px solid #0984e3; border-radius: 20px;
+        padding: 16px; margin: 12px auto 18px auto; max-width: 380px;
+        box-shadow: 0 6px 0 #074b83;
+    }
+    .input-player-name {
+        width: 100%; padding: 12px 16px; font-family: 'Fredoka One'; font-size: 1.25rem;
+        text-align: center; border-radius: 50px; border: 3px solid #74b9ff; outline: none;
+        color: #2c3e50; background: #ffffff; box-shadow: 0 4px 0 rgba(0,0,0,0.08);
+    }
+    .input-player-name:focus { border-color: #ff4757; }
+
+    .menu-art-wrapper {
+        width: 100%; max-width: 580px; border-radius: 22px; overflow: hidden; border: 5px solid #b3541e;
+        box-shadow: 0 8px 0 #803810, 0 14px 28px rgba(0,0,0,0.25); margin: 0 auto 14px auto; background: #0a1435;
+    }
+    #menuArtCanvas { display: block; width: 100%; height: 215px; }
+
+    .menu-group { display: flex; flex-direction: column; gap: 11px; max-width: 400px; margin: 0 auto; }
+    .btn-arcade {
+        font-family: 'Fredoka One', cursive; font-size: 1.15rem; padding: 13px 20px; border: none;
+        border-radius: 50px; color: white; cursor: pointer; box-shadow: var(--blooket-btn-shadow);
+        display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.1s;
+        letter-spacing: 0.5px;
+    }
+    .btn-arcade:active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(0,0,0,0.25); }
+    .btn-start-hero { background: #ff4757; box-shadow: 0 6px 0 #b71540; font-size: 1.4rem; padding: 15px 25px; }
+    .btn-online { background: #0984e3; box-shadow: 0 6px 0 #074b83; }
+    .btn-duo { background: #9b59b6; box-shadow: 0 6px 0 #8e44ad; }
+    .btn-solo { background: #2ecc71; box-shadow: 0 6px 0 #27ae60; }
+    .btn-blook-picker { background: #f39c12; box-shadow: 0 6px 0 #b7791f; }
+    .btn-opt { background: #e67e22; box-shadow: 0 6px 0 #d35400; }
+    .btn-info { background: #16a085; box-shadow: 0 6px 0 #117a65; }
+
+    .game-hud { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 8px; gap: 6px; }
+    .hud-box {
+        background: var(--card-bg); padding: 5px 10px; border-radius: 18px;
+        box-shadow: 0 5px 0 rgba(0,0,0,0.12); display: flex; align-items: center; gap: 8px;
+    }
+    .hud-box.p1 { border-top: 5px solid var(--p1-col); }
+    .hud-box.p2 { border-top: 5px solid var(--p2-col); }
+    .timer-badge { font-family: 'Fredoka One'; font-size: 1.35rem; color: #e74c3c; }
+    .timer-badge.warning { animation: blink 0.5s infinite alternate; }
+    @keyframes blink { from { opacity: 1; transform: scale(1); } to { opacity: 0.4; transform: scale(1.08); } }
+    .btn-hud-action {
+        font-family: 'Fredoka One'; background: var(--card-bg); border: 2px solid #bdc3c7;
+        color: var(--text-color); border-radius: 14px; padding: 6px 11px; font-size: 0.85rem;
+        cursor: pointer; box-shadow: 0 3px 0 rgba(0,0,0,0.12); display: flex; align-items: center; gap: 4px;
+    }
+    .btn-hud-action:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,0.12); }
+    .btn-hud-leave { background: #ff4757; color: white; border-color: #b71540; }
+    .btn-hud-fs { background: #74b9ff; color: white; border-color: #0984e3; }
+
+    .mine-viewport {
+        position: relative; width: 100%; border-radius: 26px; border: 7px solid var(--wood-frame);
+        box-shadow: 0 10px 0 var(--wood-shadow), 0 16px 28px rgba(0,0,0,0.25); overflow: hidden; background: #3d2314;
+    }
+    #mineCanvas { display: block; width: 100%; height: 460px; }
+
+    .quiz-overlay-layer {
+        position: absolute; bottom: 12px; left: 0; width: 100%; display: flex;
+        justify-content: space-between; padding: 0 14px; pointer-events: none; z-index: 100;
+    }
+    .in-game-quiz-card {
+        width: 48%; max-width: 320px; background: var(--card-bg); border-radius: 18px; padding: 12px 14px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.4); pointer-events: auto; display: none; flex-direction: column;
+        border: 4px solid var(--p1-col); animation: quizSlideUp 0.25s ease-out;
+    }
+    .in-game-quiz-card.p2-quiz { border-color: var(--p2-col); margin-left: auto; }
+    @keyframes quizSlideUp { from { transform: translateY(35px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .quiz-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .quiz-tag { font-family: 'Fredoka One'; font-size: 0.8rem; padding: 3px 10px; border-radius: 20px; color: white; }
+    .quiz-tag.p1 { background: var(--p1-col); }
+    .quiz-tag.p2 { background: var(--p2-col); }
+    .quiz-reward { font-family: 'Fredoka One'; font-size: 0.85rem; color: var(--gold-col); text-shadow: 1px 1px 0 rgba(0,0,0,0.3); }
+    .quiz-question { font-size: 0.86rem; font-weight: 800; margin-bottom: 8px; line-height: 1.35; color: var(--text-color); }
+    .quiz-answers { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .quiz-btn-opt {
+        background: #ecf0f1; color: #2c3e50; border: 2px solid #bdc3c7; border-radius: 10px;
+        padding: 7px 4px; font-size: 0.78rem; font-weight: 800; cursor: pointer; text-align: center;
+    }
+    .quiz-btn-opt:hover { background: #3498db; color: white; border-color: #2980b9; }
+
+    .dual-controls-panel { width: 100%; margin-top: 10px; display: flex; justify-content: space-between; gap: 10px; }
+    .btn-shoot-p1, .btn-shoot-p2, .btn-shoot-solo {
+        flex: 1; font-family: 'Fredoka One', cursive; font-size: 1.25rem; color: white;
+        border: none; border-radius: 40px; padding: 14px 10px; cursor: pointer; transition: 0.1s;
+    }
+    .btn-shoot-p1 { background: var(--p1-col); box-shadow: 0 6px 0 #b71540; }
+    .btn-shoot-p2 { background: var(--p2-col); box-shadow: 0 6px 0 #218c74; }
+    .btn-shoot-solo { width: 100%; background: #ff4757; box-shadow: 0 7px 0 #b71540; font-size: 1.45rem; padding: 15px; }
+
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.75);
+        display: none; justify-content: center; align-items: center; z-index: 2000; padding: 15px;
+    }
+    .modal-box {
+        background: var(--card-bg); color: var(--text-color); border-radius: 26px;
+        padding: 24px; width: 100%; max-width: 490px; text-align: center; box-shadow: 0 12px 0 rgba(0,0,0,0.3);
+    }
+    .input-code {
+        width: 100%; padding: 12px; font-family: 'Fredoka One'; font-size: 1.4rem; letter-spacing: 4px;
+        text-align: center; border-radius: 16px; border: 3px solid #0984e3; margin: 12px 0; text-transform: uppercase; outline: none;
+    }
+    .room-badge {
+        display: inline-block; background: #f1f2f6; border: 2px dashed #0984e3; padding: 8px 22px;
+        border-radius: 14px; font-family: 'Fredoka One'; font-size: 1.85rem; color: #0984e3; letter-spacing: 4px; margin: 10px 0;
+    }
+    .toast {
+        position: fixed; bottom: 25px; background: #2f3542; color: white; padding: 11px 26px;
+        border-radius: 30px; font-family: 'Fredoka One'; opacity: 0; pointer-events: none;
+        transition: 0.3s; z-index: 3000; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    .toast.show { opacity: 1; transform: translateY(-8px); }
+
+    .blook-grid-container {
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+        max-height: 290px; overflow-y: auto; padding: 8px; margin: 12px 0;
+        background: #f1f2f6; border-radius: 18px; border: 2px solid #dcdde1;
+    }
+    .blook-grid-card {
+        background: #ffffff; border-radius: 14px; border: 3px solid #ced6e0;
+        padding: 6px 4px; cursor: pointer; transition: 0.15s; display: flex;
+        flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+        box-shadow: 0 4px 0 rgba(0,0,0,0.08);
+    }
+    .blook-grid-card:hover { transform: translateY(-2px); border-color: #0984e3; }
+    .blook-grid-card.active-selected {
+        border-color: #ff4757; background: #ffeaa7; transform: scale(1.08);
+        box-shadow: 0 5px 12px rgba(255, 71, 87, 0.38);
+    }
+    .blook-card-label { font-size: 0.72rem; font-weight: 900; color: #2c3e50; }
+</style>
+</head>
+<body onclick="handleUserAudioInteraction()">
+
+    <div class="screen active" id="screen-landing">
+        <div class="hero-card" style="max-width:540px;">
+            <div style="font-size:3.5rem; margin-bottom:-8px;">⛏️💎⛏️</div>
+            <div class="game-title">MINER ARCADE</div>
+            <div class="game-sub">Master the claw, unearth rare mineral treasures, and conquer the depths.</div>
+
+            <div class="landing-blook-showcase">
+                <div class="showcase-blook-card" style="animation-delay:0s;"><canvas id="showcase-0" width="46" height="46"></canvas></div>
+                <div class="showcase-blook-card" style="animation-delay:0.3s;"><canvas id="showcase-1" width="46" height="46"></canvas></div>
+                <div class="showcase-blook-card" style="animation-delay:0.6s;"><canvas id="showcase-2" width="46" height="46"></canvas></div>
+                <div class="showcase-blook-card" style="animation-delay:0.9s;"><canvas id="showcase-3" width="46" height="46"></canvas></div>
+            </div>
+
+            <div class="landing-input-box">
+                <div style="font-weight:900; font-size:0.95rem; color:#0984e3; margin-bottom:8px;">ENTER PLAYER NAME</div>
+                <input type="text" class="input-player-name" id="player-name-input" placeholder="Player Name..." maxlength="12" value="Miner">
+            </div>
+
+            <button class="btn-arcade btn-start-hero" style="width:100%;" onclick="enterGameLobby()">
+                ENTER LOBBY
+            </button>
+        </div>
+    </div>
+
+    <div class="screen" id="screen-home">
+        <div class="hero-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <canvas id="menu-current-blook" width="38" height="38" style="border-radius:10px; border:2px solid #0984e3;"></canvas>
+                    <div style="font-family:'Fredoka One'; font-size:1.15rem; color:#0984e3;" id="welcome-player-text">
+                        Welcome, Miner! 👋
+                    </div>
+                </div>
+                <button class="btn-hud-action" style="padding:5px 12px;" onclick="backToLanding()">Edit Profile</button>
+            </div>
+
+            <div class="menu-art-wrapper">
+                <canvas id="menuArtCanvas"></canvas>
+            </div>
+
+            <div class="menu-group">
+                <button class="btn-arcade btn-online" onclick="openOnlineModal()">MULTIPLAYER</button>
+                <button class="btn-arcade btn-duo" onclick="startMode('duo')">2 PLAYERS</button>
+                <button class="btn-arcade btn-solo" onclick="startMode('solo')">SINGLEPLAYER</button>
+                <button class="btn-arcade btn-blook-picker" onclick="openBlookLockerModal()">BLOOK LOCKER</button>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-arcade btn-opt" style="flex:1;" onclick="openOptionsModal()">SETTINGS</button>
+                    <button class="btn-arcade btn-info" style="flex:1;" onclick="openPerkGuideModal()">HOW TO PLAY</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="blook-picker-modal">
+        <div class="modal-box">
+            <h2 style="font-family:'Fredoka One'; color:#f39c12; margin-bottom:4px;">CHOOSE YOUR BLOOK</h2>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:8px;">Select a character for your mining adventure!</p>
+            <div class="blook-grid-container" id="blook-grid-el"></div>
+            <button class="btn-arcade btn-solo" style="width:100%; margin-top:8px;" onclick="closeBlookLockerModal()">
+                EQUIP BLOOK
+            </button>
+        </div>
+    </div>
+
+    <div class="screen" id="screen-game">
+        <div class="game-hud">
+            <button class="btn-hud-action btn-hud-leave" onclick="confirmLeaveGame()" title="Leave Game">MENU</button>
+
+            <div class="hud-box p1" id="p1-hud">
+                <canvas id="hud-blook-p1" width="32" height="32"></canvas>
+                <div>
+                    <div style="font-size:0.72rem; font-weight:900; color:var(--p1-col);" id="p1-label">Player 1</div>
+                    <div style="font-family:'Fredoka One'; font-size:0.88rem;" id="p1-stat">0kg G • 0kg S • 0kg D</div>
+                </div>
+            </div>
+
+            <div class="hud-box" style="gap:8px;">
+                <div style="display:flex; align-items:center; gap:4px;">
+                    <span style="font-size:1.2rem;">⏳</span>
+                    <div class="timer-badge" id="game-timer">05:00</div>
+                </div>
+                <div style="width:2px; height:20px; background:#bdc3c7; opacity:0.6;"></div>
+                <div style="display:flex; align-items:center; gap:4px;">
+                    <span style="font-size:1.15rem;">✨</span>
+                    <div style="text-align:left;">
+                        <div style="font-size:0.58rem; font-weight:900; color:#d35400;">ORE RESPAWN</div>
+                        <div id="gold-respawn-timer" style="font-family:'Fredoka One'; font-size:0.9rem; color:#f39c12; line-height:1;">01:15</div>
+                    </div>
+                </div>
+                <button class="btn-hud-action btn-hud-fs" id="btn-fs" onclick="toggleFullScreen()">FS</button>
+            </div>
+
+            <div class="hud-box p2" id="p2-hud">
+                <canvas id="hud-blook-p2" width="32" height="32"></canvas>
+                <div>
+                    <div style="font-size:0.72rem; font-weight:900; color:var(--p2-col);" id="p2-label">Player 2</div>
+                    <div style="font-family:'Fredoka One'; font-size:0.88rem;" id="p2-stat">0kg G • 0kg S • 0kg D</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mine-viewport">
+            <canvas id="mineCanvas"></canvas>
+
+            <div class="quiz-overlay-layer">
+                <div class="in-game-quiz-card p1-quiz" id="quiz-card-p1">
+                    <div class="quiz-card-header">
+                        <span class="quiz-tag p1" id="quiz-p1-tag">QUIZ P1</span>
+                        <span class="quiz-reward" id="quiz-p1-reward">+0 kg</span>
+                    </div>
+                    <div class="quiz-question" id="quiz-p1-q">Quiz Question P1...</div>
+                    <div class="quiz-answers" id="quiz-p1-opts"></div>
+                </div>
+
+                <div class="in-game-quiz-card p2-quiz" id="quiz-card-p2">
+                    <div class="quiz-card-header">
+                        <span class="quiz-tag p2" id="quiz-p2-tag">QUIZ P2</span>
+                        <span class="quiz-reward" id="quiz-p2-reward">+0 kg</span>
+                    </div>
+                    <div class="quiz-question" id="quiz-p2-q">Quiz Question P2...</div>
+                    <div class="quiz-answers" id="quiz-p2-opts"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dual-controls-panel" id="controls-dual">
+            <button class="btn-shoot-p1" id="btn-shoot-p1" onclick="handleP1Shoot(event)">P1 DROP [S]</button>
+            <button class="btn-shoot-p2" id="btn-shoot-p2" onclick="handleP2Shoot(event)">P2 DROP [↓ / ENTER]</button>
+        </div>
+        <div style="width:100%; margin-top:10px; display:none;" id="controls-solo">
+            <button class="btn-shoot-solo" id="btn-shoot-solo" onclick="handleOnlineOrSoloShoot(event)">DROP CLAW! [SPACE / TAP]</button>
+        </div>
+    </div>
+
+    <div class="screen" id="screen-scale">
+        <div class="hero-card">
+            <h2 style="font-family:'Fredoka One'; color:var(--gold-col); font-size:1.8rem;">⚖️ FINAL WEIGH-IN ⚖️</h2>
+            <p style="font-weight:800; color:var(--text-muted); font-size:0.9rem; margin-bottom:10px;">
+                Exchange Rate: Diamond = $300/kg | Gold = $80/kg | Silver = $20/kg
+            </p>
+            <div style="max-width:440px; margin:0 auto;"><canvas id="scaleCanvas"></canvas></div>
+            <div id="winner-banner" style="font-family:'Fredoka One'; font-size:1.5rem; margin:14px 0;"></div>
+            <button class="btn-arcade btn-solo" style="margin:0 auto; padding:10px 36px;" onclick="returnToLobby()">MAIN MENU</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="confirm-leave-modal">
+        <div class="modal-box" style="max-width:360px;">
+            <div style="font-size:2.6rem; margin-bottom:4px;">🚪</div>
+            <h2 style="font-family:'Fredoka One'; margin-bottom:6px; color:#ff4757;">Leave Game?</h2>
+            <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:16px;">Your current mining session will be terminated.</p>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-arcade" style="flex:1; background:#ff4757; padding:10px;" onclick="executeLeaveGame()">Exit</button>
+                <button class="btn-arcade" style="flex:1; background:#95a5a6; padding:10px;" onclick="closeConfirmLeaveModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="online-modal">
+        <div class="modal-box">
+            <h2 style="font-family:'Fredoka One'; color:#0984e3; margin-bottom:8px;">ONLINE MULTIPLAYER</h2>
+            <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:12px;">Play with friends across devices in real-time!</p>
+            
+            <div id="online-main-menu">
+                <button class="btn-arcade btn-online" style="width:100%; margin-bottom:8px;" onclick="hostOnlineRoom()">Host Game</button>
+                <div style="margin: 8px 0; font-weight:900; color:var(--text-muted);">— OR —</div>
+                <input type="text" class="input-code" id="join-room-input" placeholder="ROOM CODE" maxlength="5">
+                <button class="btn-arcade btn-duo" style="width:100%; margin-bottom:8px;" onclick="joinOnlineRoom()">Join with Code</button>
+                <button class="btn-arcade btn-solo" style="width:100%;" onclick="findRandomMatch()">Quick Match</button>
+            </div>
+            
+            <div id="online-waiting-view" style="display:none;">
+                <p style="font-weight:800;">Share this Code with your friend:</p>
+                <div class="room-badge" id="display-room-code">----</div>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">Waiting for opponent to connect...</p>
+                <button class="btn-arcade" style="background:#e67e22; width:100%; margin-bottom:8px;" onclick="cancelOnlineWaiting()">Cancel / Join with Code</button>
+            </div>
+            <button class="btn-arcade" style="background:#95a5a6; width:100%; margin-top:12px;" onclick="closeOnlineModal()">Close</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="options-modal">
+        <div class="modal-box">
+            <h2 style="font-family:'Fredoka One'; margin-bottom:14px;">SETTINGS</h2>
+            <div style="display:flex; justify-content:space-between; margin:10px 0; font-weight:800;">
+                <span>Background Music (BGM):</span>
+                <select id="opt-bgm" onchange="applyAudioSetting()" style="padding:4px; font-family:'Fredoka One';">
+                    <option value="off">OFF 🔇</option><option value="on">ON 🎵</option>
+                </select>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin:10px 0; font-weight:800;">
+                <span>Sound Effects (SFX):</span>
+                <select id="opt-sfx" style="padding:4px; font-family:'Fredoka One';">
+                    <option value="on">ON 🔊</option><option value="off">OFF 🔇</option>
+                </select>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin:10px 0; font-weight:800;">
+                <span>Theme:</span>
+                <select id="opt-theme" onchange="applyThemeSetting()" style="padding:4px; font-family:'Fredoka One';">
+                    <option value="light">Light ☀️</option><option value="dark">Dark 🌙</option>
+                </select>
+            </div>
+            <button class="btn-arcade btn-solo" style="width:100%; margin-top:14px;" onclick="closeOptionsModal()">Save</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="perk-info-modal">
+        <div class="modal-box" style="text-align:left; max-height:85vh; overflow-y:auto;">
+            <h2 style="font-family:'Fredoka One'; text-align:center; margin-bottom:10px;">HOW TO PLAY</h2>
+            <p style="font-size:0.88rem; line-height:1.45; margin-bottom:6px;">💎 <b>Diamond ($300/kg):</b> Rare standalone gemstone, very small, highly valuable!</p>
+            <p style="font-size:0.88rem; line-height:1.45; margin-bottom:6px;">🥇 <b>Gold ($80/kg):</b> Crystalline golden nugget clusters with bright metallic facets.</p>
+            <p style="font-size:0.88rem; line-height:1.45; margin-bottom:6px;">🥈 <b>Silver ($20/kg):</b> Raw crystalline silver clusters with sharp chrome prisms.</p>
+            <p style="font-size:0.88rem; line-height:1.45; margin-bottom:6px;">🦀 <b>Underground Encounter:</b> When claw grasps an ore underground, answer the quiz to haul it up!</p>
+            <p style="font-size:0.88rem; line-height:1.45; margin-bottom:6px;">💰 <b>Cash Weigh-In:</b> All collected mineral values are revealed at the Final Weigh-In scale!</p>
+            <button class="btn-arcade btn-opt" style="width:100%; margin-top:12px;" onclick="closePerkGuideModal()">Got It!</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast-el">Notification</div>
+
+<script>
+/* ================= 12 BLOOKET AVATARS COLLECTION ================= */
+const BLOOK_COLLECTION = [
+    { id: 'cowboy', name: 'Cowboy', bg: '#f5cd79', border: '#e15f41' },
+    { id: 'astronaut', name: 'Astronaut', bg: '#f1f2f6', border: '#ced6e0' },
+    { id: 'robot', name: 'Robot', bg: '#57606f', border: '#2f3542' },
+    { id: 'king', name: 'King', bg: '#fed330', border: '#f7b731' },
+    { id: 'wizard', name: 'Wizard', bg: '#8854d0', border: '#5f27cd' },
+    { id: 'alien', name: 'Alien', bg: '#20bf6b', border: '#0fb9b1' },
+    { id: 'ninja', name: 'Ninja', bg: '#2f3640', border: '#1e272e' },
+    { id: 'pirate', name: 'Pirate', bg: '#e58e26', border: '#b71540' },
+    { id: 'monster', name: 'Monster', bg: '#a55eea', border: '#8854d0' },
+    { id: 'tiger', name: 'Tiger', bg: '#fa8231', border: '#e67e22' },
+    { id: 'dragon', name: 'Dragon', bg: '#26de81', border: '#20bf6b' },
+    { id: 'miner', name: 'Miner', bg: '#f7d794', border: '#e77f67' }
+];
+
+function drawBlook(tctx, type, cx, cy, sz, blink = false, breathBob = 0) {
+    tctx.save();
+    tctx.translate(cx, cy + breathBob);
+    const half = sz / 2, rad = sz * 0.22;
+    const info = BLOOK_COLLECTION.find(b => b.id === type) || BLOOK_COLLECTION[0];
+
+    tctx.fillStyle = info.bg; tctx.beginPath(); tctx.roundRect(-half, -half, sz, sz, rad); tctx.fill();
+    tctx.strokeStyle = info.border; tctx.lineWidth = sz * 0.055; tctx.stroke();
+
+    function drawStandardEyes(eyY = -sz * 0.02, eyeSpacing = half * 0.32, eyeR = sz * 0.11) {
+        if (blink) {
+            tctx.lineWidth = sz * 0.06; tctx.strokeStyle = '#1e272e';
+            tctx.beginPath(); tctx.moveTo(-eyeSpacing - eyeR, eyY); tctx.lineTo(-eyeSpacing + eyeR, eyY); tctx.stroke();
+            tctx.beginPath(); tctx.moveTo(eyeSpacing - eyeR, eyY); tctx.lineTo(eyeSpacing + eyeR, eyY); tctx.stroke();
+        } else {
+            tctx.fillStyle = '#1e272e';
+            tctx.beginPath(); tctx.arc(-eyeSpacing, eyY, eyeR, 0, Math.PI * 2); tctx.fill();
+            tctx.beginPath(); tctx.arc(eyeSpacing, eyY, eyeR, 0, Math.PI * 2); tctx.fill();
+            tctx.fillStyle = '#ffffff';
+            tctx.beginPath(); tctx.arc(-eyeSpacing - eyeR*0.3, eyY - eyeR*0.3, eyeR * 0.42, 0, Math.PI * 2); tctx.fill();
+            tctx.beginPath(); tctx.arc(eyeSpacing - eyeR*0.3, eyY - eyeR*0.3, eyeR * 0.42, 0, Math.PI * 2); tctx.fill();
+        }
+    }
+
+    if (type === 'cowboy') {
+        tctx.fillStyle = '#78350f';
+        tctx.beginPath(); tctx.ellipse(0, -half * 0.72, half * 1.15, sz * 0.16, 0, 0, Math.PI * 2); tctx.fill();
+        tctx.beginPath(); tctx.roundRect(-half * 0.55, -half * 1.15, half * 1.1, sz * 0.38, sz * 0.1); tctx.fill();
+        tctx.fillStyle = '#b45309'; tctx.fillRect(-half * 0.55, -half * 0.82, half * 1.1, sz * 0.08);
+        tctx.fillStyle = '#e74c3c';
+        tctx.beginPath(); tctx.moveTo(-half * 0.5, half * 0.7); tctx.lineTo(half * 0.5, half * 0.7); tctx.lineTo(0, half * 0.98); tctx.closePath(); tctx.fill();
+        drawStandardEyes();
+        tctx.strokeStyle = '#1e272e'; tctx.lineWidth = sz * 0.05; tctx.lineCap = 'round';
+        tctx.beginPath(); tctx.arc(0, sz * 0.18, sz * 0.16, 0.1 * Math.PI, 0.9 * Math.PI); tctx.stroke();
+    } else if (type === 'astronaut') {
+        tctx.fillStyle = '#ff4757'; tctx.beginPath(); tctx.arc(-half * 0.9, -half * 0.5, sz * 0.09, 0, Math.PI * 2); tctx.fill();
+        const vg = tctx.createLinearGradient(0, -half * 0.4, 0, half * 0.4);
+        vg.addColorStop(0, '#00d2d3'); vg.addColorStop(1, '#01a3a4');
+        tctx.fillStyle = vg; tctx.beginPath(); tctx.roundRect(-half * 0.65, -half * 0.4, sz * 0.65, sz * 0.48, sz * 0.14); tctx.fill();
+        tctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+        tctx.beginPath(); tctx.ellipse(-half * 0.2, -half * 0.2, sz * 0.18, sz * 0.06, -0.4, 0, Math.PI * 2); tctx.fill();
+    } else if (type === 'robot') {
+        tctx.fillStyle = '#ffa502'; tctx.beginPath(); tctx.arc(0, -half * 0.95, sz * 0.09, 0, Math.PI * 2); tctx.fill();
+        tctx.fillStyle = '#1e272e'; tctx.beginPath(); tctx.roundRect(-half * 0.7, -half * 0.45, sz * 0.7, sz * 0.6, sz * 0.1); tctx.fill();
+        tctx.fillStyle = blink ? '#1e272e' : '#2ed573';
+        tctx.fillRect(-half * 0.45, -sz * 0.08, sz * 0.14, sz * 0.14);
+        tctx.fillRect(half * 0.15, -sz * 0.08, sz * 0.14, sz * 0.14);
+        tctx.fillStyle = '#2ed573'; tctx.fillRect(-half * 0.35, sz * 0.18, sz * 0.35, sz * 0.05);
+    } else if (type === 'king') {
+        tctx.fillStyle = '#fa8231';
+        tctx.beginPath(); tctx.moveTo(-half * 0.7, -half * 0.4); tctx.lineTo(-half * 0.7, -half * 1.05);
+        tctx.lineTo(-half * 0.35, -half * 0.75); tctx.lineTo(0, -half * 1.15); tctx.lineTo(half * 0.35, -half * 0.75);
+        tctx.lineTo(half * 0.7, -half * 1.05); tctx.lineTo(half * 0.7, -half * 0.4); tctx.closePath(); tctx.fill();
+        tctx.fillStyle = '#eb3b5a'; tctx.beginPath(); tctx.arc(0, -half * 0.75, sz * 0.06, 0, Math.PI * 2); tctx.fill();
+        drawStandardEyes(sz * 0.02, half * 0.28, sz * 0.1);
+        tctx.strokeStyle = '#1e272e'; tctx.lineWidth = sz * 0.05; tctx.lineCap = 'round';
+        tctx.beginPath(); tctx.arc(0, sz * 0.18, sz * 0.14, 0.1 * Math.PI, 0.9 * Math.PI); tctx.stroke();
+    } else if (type === 'wizard') {
+        tctx.fillStyle = '#4b0082';
+        tctx.beginPath(); tctx.moveTo(-half*0.8, -half*0.5); tctx.lineTo(half*0.8, -half*0.5); tctx.lineTo(0, -half*1.3); tctx.closePath(); tctx.fill();
+        tctx.fillStyle = '#f1c40f'; tctx.beginPath(); tctx.arc(0, -half*0.8, sz*0.06, 0, Math.PI*2); tctx.fill();
+        tctx.fillStyle = '#f1f2f6';
+        tctx.beginPath(); tctx.moveTo(-half*0.4, half*0.3); tctx.lineTo(half*0.4, half*0.3); tctx.lineTo(0, half*0.9); tctx.closePath(); tctx.fill();
+        drawStandardEyes(-sz*0.08, half*0.3, sz*0.09);
+    } else if (type === 'alien') {
+        tctx.fillStyle = '#2ed573';
+        [-half*0.4, 0, half*0.4].forEach(ax => {
+            tctx.beginPath(); tctx.arc(ax, -half*0.9, sz*0.06, 0, Math.PI*2); tctx.fill();
+            tctx.fillRect(ax-1.5, -half*0.9, 3, sz*0.25);
+        });
+        [-half*0.38, 0, half*0.38].forEach(ex => {
+            tctx.fillStyle = '#1e272e'; tctx.beginPath(); tctx.arc(ex, -sz*0.02, sz*0.09, 0, Math.PI*2); tctx.fill();
+            tctx.fillStyle = '#ffffff'; tctx.beginPath(); tctx.arc(ex-2, -sz*0.05, sz*0.035, 0, Math.PI*2); tctx.fill();
+        });
+        tctx.strokeStyle = '#1e272e'; tctx.lineWidth = sz*0.05; tctx.beginPath(); tctx.arc(0, sz*0.2, sz*0.14, 0.1*Math.PI, 0.9*Math.PI); tctx.stroke();
+    } else if (type === 'ninja') {
+        tctx.fillStyle = '#ff4757'; tctx.fillRect(-half*0.9, -half*0.4, sz*0.9, sz*0.16);
+        tctx.fillStyle = '#f5cd79'; tctx.fillRect(-half*0.7, -half*0.15, sz*0.7, sz*0.28);
+        drawStandardEyes(0, half*0.32, sz*0.08);
+    } else if (type === 'pirate') {
+        tctx.fillStyle = '#2f3542';
+        tctx.beginPath(); tctx.ellipse(0, -half*0.65, half*1.05, sz*0.16, 0, 0, Math.PI*2); tctx.fill();
+        tctx.fillStyle = '#1e272e'; tctx.beginPath(); tctx.arc(-half*0.32, -sz*0.02, sz*0.12, 0, Math.PI*2); tctx.fill();
+        tctx.strokeStyle = '#1e272e'; tctx.lineWidth = sz*0.04; tctx.beginPath(); tctx.moveTo(-half*0.7, -sz*0.15); tctx.lineTo(0, sz*0.1); tctx.stroke();
+        tctx.fillStyle = '#1e272e'; tctx.beginPath(); tctx.arc(half*0.32, -sz*0.02, sz*0.1, 0, Math.PI*2); tctx.fill();
+        tctx.fillStyle = '#ffffff'; tctx.beginPath(); tctx.arc(half*0.29, -sz*0.04, sz*0.04, 0, Math.PI*2); tctx.fill();
+    } else if (type === 'monster') {
+        tctx.fillStyle = '#f1c40f';
+        tctx.beginPath(); tctx.moveTo(-half*0.6, -half); tctx.lineTo(-half*0.4, -half*1.2); tctx.lineTo(-half*0.2, -half); tctx.fill();
+        tctx.beginPath(); tctx.moveTo(half*0.2, -half); tctx.lineTo(half*0.4, -half*1.2); tctx.lineTo(half*0.6, -half); tctx.fill();
+        tctx.fillStyle = '#1e272e'; tctx.beginPath(); tctx.arc(0, -sz*0.04, sz*0.18, 0, Math.PI*2); tctx.fill();
+        tctx.fillStyle = '#ffffff'; tctx.beginPath(); tctx.arc(-3, -sz*0.08, sz*0.07, 0, Math.PI*2); tctx.fill();
+        tctx.fillStyle = '#ffffff';
+        tctx.beginPath(); tctx.moveTo(-4, sz*0.15); tctx.lineTo(0, sz*0.25); tctx.lineTo(4, sz*0.15); tctx.fill();
+    } else if (type === 'tiger') {
+        tctx.fillStyle = '#fa8231';
+        tctx.beginPath(); tctx.arc(-half*0.65, -half*0.75, sz*0.14, 0, Math.PI*2); tctx.fill();
+        tctx.beginPath(); tctx.arc(half*0.65, -half*0.75, sz*0.14, 0, Math.PI*2); tctx.fill();
+        tctx.fillStyle = '#2f3542';
+        tctx.fillRect(-half*0.9, -sz*0.1, sz*0.15, sz*0.06); tctx.fillRect(half*0.75, -sz*0.1, sz*0.15, sz*0.06);
+        drawStandardEyes();
+        tctx.fillStyle = '#2f3542'; tctx.beginPath(); tctx.arc(0, sz*0.15, sz*0.06, 0, Math.PI*2); tctx.fill();
+    } else if (type === 'dragon') {
+        tctx.fillStyle = '#f39c12';
+        tctx.beginPath(); tctx.moveTo(-half*0.6, -half*0.7); tctx.lineTo(-half*0.8, -half*1.2); tctx.lineTo(-half*0.3, -half*0.8); tctx.fill();
+        tctx.beginPath(); tctx.moveTo(half*0.3, -half*0.8); tctx.lineTo(half*0.8, -half*1.2); tctx.lineTo(half*0.6, -half*0.7); tctx.fill();
+        drawStandardEyes(-sz*0.02, half*0.35, sz*0.1);
+        tctx.fillStyle = '#ffffff';
+        tctx.beginPath(); tctx.moveTo(-half*0.2, sz*0.15); tctx.lineTo(-half*0.1, sz*0.26); tctx.lineTo(0, sz*0.15); tctx.fill();
+        tctx.beginPath(); tctx.moveTo(0, sz*0.15); tctx.lineTo(half*0.1, sz*0.26); tctx.lineTo(half*0.2, sz*0.15); tctx.fill();
+    } else if (type === 'miner') {
+        tctx.fillStyle = '#f1c40f';
+        tctx.beginPath(); tctx.roundRect(-half*0.8, -half*1.05, sz*0.8, sz*0.35, sz*0.1); tctx.fill();
+        tctx.fillStyle = '#ffffff';
+        tctx.beginPath(); tctx.arc(0, -half*0.8, sz*0.1, 0, Math.PI*2); tctx.fill();
+        tctx.strokeStyle = '#2f3542'; tctx.lineWidth = 2; tctx.stroke();
+        drawStandardEyes();
+        tctx.strokeStyle = '#1e272e'; tctx.lineWidth = sz*0.05; tctx.beginPath(); tctx.arc(0, sz*0.18, sz*0.14, 0.1*Math.PI, 0.9*Math.PI); tctx.stroke();
+    }
+    tctx.restore();
+}
+
+function initLandingShowcase() {
+    ['cowboy', 'alien', 'wizard', 'dragon'].forEach((bk, i) => {
+        const sc = document.getElementById(`showcase-${i}`);
+        if (sc) {
+            const sctx = sc.getContext('2d');
+            sctx.clearRect(0,0,46,46);
+            drawBlook(sctx, bk, 23, 24, 34);
+        }
+    });
+}
+
+function openBlookLockerModal() {
+    buildBlookGrid();
+    document.getElementById('blook-picker-modal').style.display = 'flex';
+}
+function closeBlookLockerModal() {
+    document.getElementById('blook-picker-modal').style.display = 'none';
+    updateCurrentMenuBlookPreview();
+}
+
+function buildBlookGrid() {
+    const grid = document.getElementById('blook-grid-el');
+    if (!grid) return;
+    grid.innerHTML = '';
+    BLOOK_COLLECTION.forEach(b => {
+        const card = document.createElement('div');
+        card.className = `blook-grid-card ${b.id === myAvatarBlook ? 'active-selected' : ''}`;
+        card.onclick = () => {
+            myAvatarBlook = b.id;
+            localStorage.setItem('miner_avatar_blook', myAvatarBlook);
+            document.querySelectorAll('.blook-grid-card').forEach(c => c.classList.remove('active-selected'));
+            card.classList.add('active-selected');
+            toast(`Equipped: ${b.name}! ✨`);
+        };
+        const cvEl = document.createElement('canvas');
+        cvEl.width = 46; cvEl.height = 46;
+        const cctx = cvEl.getContext('2d');
+        drawBlook(cctx, b.id, 23, 23, 34);
+        const lbl = document.createElement('div');
+        lbl.className = 'blook-card-label';
+        lbl.innerText = b.name;
+        card.appendChild(cvEl);
+        card.appendChild(lbl);
+        grid.appendChild(card);
+    });
+}
+
+function updateCurrentMenuBlookPreview() {
+    const mbc = document.getElementById('menu-current-blook');
+    if (mbc) {
+        const mctx = mbc.getContext('2d');
+        mctx.clearRect(0,0,38,38);
+        drawBlook(mctx, myAvatarBlook, 19, 19, 28);
+    }
+}
+
+/* ================= AUDIO SYNTHESIZER ================= */
+let actx = null, bgmTimer = null, isBgmOn = false, isSfxOn = true, audioUnlocked = false;
+const melodyNotes = [261.63, 329.63, 392.00, 523.25, 440.00, 392.00, 329.63, 293.66];
+const bassNotes = [130.81, 130.81, 164.81, 196.00, 174.61, 174.61, 196.00, 196.00];
+let bStep = 0;
+
+function ensureAudioReady() {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    audioUnlocked = true;
+}
+function handleUserAudioInteraction() { if (!audioUnlocked) ensureAudioReady(); }
+
+function playSynthNote(freq, type, dur, gainVal) {
+    if (!actx || !audioUnlocked || freq <= 0) return;
+    try {
+        const osc = actx.createOscillator(), g = actx.createGain();
+        osc.type = type; osc.frequency.setValueAtTime(freq, actx.currentTime);
+        g.gain.setValueAtTime(gainVal, actx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + dur);
+        osc.connect(g); g.connect(actx.destination);
+        osc.start(); osc.stop(actx.currentTime + dur);
+    } catch(e){}
+}
+function beep(freq, type='sine', dur=0.15, gain=0.2) {
+    if (!isSfxOn) return; ensureAudioReady(); playSynthNote(freq, type, dur, gain);
+}
+function sfxShoot() { beep(390, 'triangle', 0.22, 0.35); }
+function sfxHook() { beep(580, 'sine', 0.12, 0.4); }
+function sfxCorrect() { beep(523, 'triangle', 0.1, 0.3); setTimeout(() => beep(659, 'triangle', 0.2, 0.3), 100); }
+function sfxZonk() { beep(160, 'sawtooth', 0.25, 0.4); setTimeout(() => beep(110, 'sawtooth', 0.35, 0.4), 160); }
+function sfxDrop() { beep(280, 'sine', 0.15, 0.3); setTimeout(() => beep(180, 'triangle', 0.2, 0.35), 90); }
+function sfxFanfare() { [392, 523, 659, 784].forEach((f, i) => setTimeout(() => beep(f, 'square', 0.2, 0.2), i * 140)); }
+function sfxSparkle() { [659, 784, 987, 1318].forEach((f, i) => setTimeout(() => beep(f, 'triangle', 0.12, 0.15), i * 80)); }
+
+function applyAudioSetting() {
+    ensureAudioReady();
+    isBgmOn = (document.getElementById('opt-bgm').value === 'on');
+    if (isBgmOn) {
+        if (!bgmTimer) {
+            bgmTimer = setInterval(() => {
+                if (isBgmOn && actx && audioUnlocked) {
+                    playSynthNote(melodyNotes[bStep], 'triangle', 0.22, 0.045);
+                    playSynthNote(bassNotes[bStep], 'sine', 0.26, 0.035);
+                    bStep = (bStep + 1) % melodyNotes.length;
+                }
+            }, 230);
+        }
+    } else { clearInterval(bgmTimer); bgmTimer = null; }
+}
+
+/* ================= PROFILE & NAVIGATION ================= */
+let myPlayerName = localStorage.getItem('miner_name') || 'Miner';
+let myAvatarBlook = localStorage.getItem('miner_avatar_blook') || 'cowboy';
+let opponentName = 'Friend', opponentAvatarBlook = 'astronaut';
+
+function enterGameLobby() {
+    ensureAudioReady();
+    const inputVal = document.getElementById('player-name-input').value.trim();
+    if (inputVal.length > 0) myPlayerName = inputVal;
+    localStorage.setItem('miner_name', myPlayerName);
+    localStorage.setItem('miner_avatar_blook', myAvatarBlook);
+    document.getElementById('welcome-player-text').innerText = `Welcome, ${myPlayerName}! 👋`;
+    updateCurrentMenuBlookPreview();
+    sfxSparkle(); showScreen('screen-home'); startMenuArt();
+}
+function backToLanding() { showScreen('screen-landing'); }
+
+function confirmLeaveGame() { ensureAudioReady(); document.getElementById('confirm-leave-modal').style.display = 'flex'; }
+function closeConfirmLeaveModal() { document.getElementById('confirm-leave-modal').style.display = 'none'; }
+function executeLeaveGame() {
+    closeConfirmLeaveModal();
+    if (gameMode === 'online' && peerConn && isOnlineConnected) {
+        try { peerConn.send({ type: 'PLAYER_LEFT' }); } catch(e){}
+        setTimeout(() => { if (peerConn) peerConn.close(); }, 120);
+    }
+    returnToLobby();
+}
+function returnToLobby() {
+    if (gameTimerInterval) clearInterval(gameTimerInterval);
+    if (syncBroadcastInterval) clearInterval(syncBroadcastInterval);
+    if (animFrameId) cancelAnimationFrame(animFrameId);
+    isOnlineConnected = false;
+    document.getElementById('quiz-card-p1').style.display = 'none';
+    document.getElementById('quiz-card-p2').style.display = 'none';
+    showScreen('screen-home'); startMenuArt(); toast("Returned to Main Menu");
+}
+
+function toggleFullScreen() {
+    ensureAudioReady();
+    const btn = document.getElementById('btn-fs');
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().then(() => { if (btn) btn.innerText = "EXIT"; toast("Fullscreen Enabled"); }).catch(() => toast("Fullscreen not supported"));
+    } else {
+        if (document.exitFullscreen) document.exitFullscreen().then(() => { if (btn) btn.innerText = "FS"; });
+    }
+}
+document.addEventListener('fullscreenchange', () => {
+    const btn = document.getElementById('btn-fs');
+    if (btn) btn.innerText = document.fullscreenElement ? "EXIT" : "FS";
+});
+
+function openOptionsModal() { document.getElementById('options-modal').style.display = 'flex'; }
+function closeOptionsModal() { document.getElementById('options-modal').style.display = 'none'; }
+function openPerkGuideModal() { document.getElementById('perk-info-modal').style.display = 'flex'; }
+function closePerkGuideModal() { document.getElementById('perk-info-modal').style.display = 'none'; }
+
+function openOnlineModal() {
+    if (!isOnlineConnected) {
+        document.getElementById('online-main-menu').style.display = 'block';
+        document.getElementById('online-waiting-view').style.display = 'none';
+    }
+    document.getElementById('online-modal').style.display = 'flex';
+}
+
+function cancelOnlineWaiting() {
+    if (peer && !isOnlineConnected) {
+        try { peer.destroy(); } catch(e){}
+        peer = null;
+    }
+    isOnlineHost = false;
+    document.getElementById('online-waiting-view').style.display = 'none';
+    document.getElementById('online-main-menu').style.display = 'block';
+    document.getElementById('display-room-code').innerText = '----';
+    toast("Multiplayer hosting cancelled");
+}
+
+function closeOnlineModal() {
+    document.getElementById('online-modal').style.display = 'none';
+    if (!isOnlineConnected && isOnlineHost) cancelOnlineWaiting();
+}
+
+function applyThemeSetting() { document.body.setAttribute('data-theme', document.getElementById('opt-theme').value); }
+
+function toast(msg) {
+    const t = document.getElementById('toast-el'); t.innerText = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2600);
+}
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if (id === 'screen-game') initCanvasHD();
+    if (id === 'screen-home') {
+        updateCurrentMenuBlookPreview();
+        startMenuArt();
+    } else isMenuArtRunning = false;
+}
+
+/* ================= ENGLISH ICT QUIZ BANK ================= */
+const ICT_BANK = [
+    { q: "Which of the following is considered the 'brain' of the computer?", a: "CPU", opts: ["RAM", "CPU", "Hard Drive", "Power Supply"] },
+    { q: "What type of software is the operating system (e.g., Windows, macOS)?", a: "System Software", opts: ["Application Software", "System Software", "Utility Software", "Malware"] },
+    { q: "Which hardware component supplies power to all other components?", a: "PSU", opts: ["Motherboard", "CPU", "PSU", "GPU"] },
+    { q: "What is the main printed circuit board in a computer called?", a: "Motherboard", opts: ["Sound Card", "Motherboard", "Network Card", "Expansion Board"] },
+    { q: "Which software is specifically designed to perform a specific task for users, like Microsoft Word?", a: "Application Software", opts: ["System Software", "Application Software", "Device Driver", "BIOS"] },
+    { q: "What does CPU stand for?", a: "Central Processing Unit", opts: ["Central Process Utility", "Computer Processing Unit", "Central Processing Unit", "Core Processing Unit"] },
+    { q: "Which hardware component is responsible for rendering images and videos?", a: "Graphics Card", opts: ["Sound Card", "Network Card", "Graphics Card", "RAM"] },
+    { q: "What is the term for the physical tangible parts of a computer system?", a: "Hardware", opts: ["Software", "Hardware", "Firmware", "Shareware"] },
+    { q: "What is the specialized software embedded into hardware components, like the BIOS?", a: "Firmware", opts: ["Malware", "Freeware", "Firmware", "Application"] },
+    { q: "Which of the following is an open-source operating system?", a: "Linux", opts: ["Windows", "macOS", "Linux", "iOS"] },
+    { q: "What type of software helps maintain, analyze, and optimize a computer, like an antivirus?", a: "Utility Software", opts: ["Application Software", "System Software", "Utility Software", "Firmware"] },
+    { q: "Which hardware part prevents the CPU from overheating?", a: "Heat Sink", opts: ["Hard Drive", "Heat Sink", "RAM", "Power Supply"] },
+    { q: "What is the software program that allows the operating system to communicate with hardware?", a: "Device Driver", opts: ["Application", "BIOS", "Device Driver", "Compiler"] },
+    { q: "Which component executes the instructions of a computer program?", a: "CPU", opts: ["RAM", "Hard Drive", "CPU", "Monitor"] },
+    { q: "Web browsers like Google Chrome and Mozilla Firefox are classified as?", a: "Application Software", opts: ["System Software", "Application Software", "Utility Software", "Operating Systems"] },
+    { q: "What type of software license allows users to view and modify the source code?", a: "Open Source", opts: ["Proprietary", "Open Source", "Shareware", "Freeware"] },
+    { q: "Which device is primarily used to type text into a computer?", a: "Keyboard", opts: ["Mouse", "Keyboard", "Monitor", "Printer"] },
+    { q: "Which device is used to capture physical documents or photos into digital format?", a: "Scanner", opts: ["Printer", "Scanner", "Plotter", "Projector"] },
+    { q: "What type of device is a computer monitor?", a: "Output Device", opts: ["Input Device", "Output Device", "Storage Device", "Processing Device"] },
+    { q: "Which input device allows users to control a pointer on the screen by moving the device?", a: "Mouse", opts: ["Keyboard", "Mouse", "Printer", "Speaker"] },
+    { q: "Which device is used to produce physical hard copies of digital documents?", a: "Printer", opts: ["Monitor", "Scanner", "Printer", "Projector"] },
+    { q: "What type of device is a microphone?", a: "Input Device", opts: ["Input Device", "Output Device", "Storage Device", "Processing Device"] },
+    { q: "Which device is used to output sound from a computer?", a: "Speaker", opts: ["Microphone", "Speaker", "Webcam", "Scanner"] },
+    { q: "What device is commonly used for playing video games to control characters?", a: "Joystick", opts: ["Printer", "Scanner", "Joystick", "Monitor"] },
+    { q: "Which device projects computer images onto a large screen or wall?", a: "Projector", opts: ["Monitor", "Projector", "Scanner", "Printer"] },
+    { q: "A touchscreen display acts as which type of device?", a: "Both Input and Output", opts: ["Input Device only", "Output Device only", "Both Input and Output", "Storage Device"] },
+    { q: "Which device captures live video for video calls or streaming?", a: "Webcam", opts: ["Monitor", "Scanner", "Webcam", "Printer"] },
+    { q: "What type of printer uses a laser beam to produce high-quality text and graphics?", a: "Laser Printer", opts: ["Inkjet Printer", "Laser Printer", "Dot Matrix Printer", "Thermal Printer"] },
+    { q: "Which input device reads biological data like fingerprints for security?", a: "Biometric Scanner", opts: ["Barcode Reader", "Biometric Scanner", "OMR Reader", "Touchpad"] },
+    { q: "Which specialized output device is used to print large architectural blueprints?", a: "Plotter", opts: ["Inkjet Printer", "Laser Printer", "Plotter", "3D Printer"] },
+    { q: "Which device allows a computer to read retail product tags at a supermarket?", a: "Barcode Reader", opts: ["Barcode Reader", "Scanner", "Webcam", "Microphone"] },
+    { q: "What input device is commonly built into laptops as a substitute for a mouse?", a: "Touchpad", opts: ["Trackball", "Touchpad", "Joystick", "Keyboard"] },
+    { q: "Which device converts digital audio signals into sound waves for a single user?", a: "Headphones", opts: ["Speaker", "Microphone", "Headphones", "Sound Card"] },
+    { q: "Which storage device uses magnetic platters to store data?", a: "HDD", opts: ["SSD", "HDD", "Flash Drive", "CD-ROM"] },
+    { q: "What does RAM stand for?", a: "Random Access Memory", opts: ["Read Access Memory", "Random Access Memory", "Rapid Action Memory", "Run Application Memory"] },
+    { q: "Which type of memory is volatile and loses its data when the power is turned off?", a: "RAM", opts: ["ROM", "RAM", "SSD", "Hard Drive"] },
+    { q: "Which non-volatile storage device has no moving parts and is faster than an HDD?", a: "SSD", opts: ["HDD", "SSD", "Floppy Disk", "CD-RW"] },
+    { q: "What type of memory contains permanent startup instructions (BIOS) and is non-volatile?", a: "ROM", opts: ["RAM", "ROM", "Cache Memory", "Virtual Memory"] },
+    { q: "Which optical storage medium typically holds up to 700 MB of data?", a: "CD-ROM", opts: ["CD-ROM", "DVD-ROM", "Blu-ray", "Floppy Disk"] },
+    { q: "What is a portable, small solid-state storage device that connects via a USB port?", a: "Flash Drive", opts: ["Hard Drive", "Flash Drive", "CD-ROM", "RAM"] },
+    { q: "Which optical disc has the highest storage capacity for high-definition video?", a: "Blu-ray Disc", opts: ["CD-ROM", "DVD-ROM", "Blu-ray Disc", "Floppy Disk"] },
+    { q: "What extremely fast memory is located inside or close to the CPU to speed up data access?", a: "Cache Memory", opts: ["RAM", "Cache Memory", "HDD", "ROM"] },
+    { q: "Which obsolete storage device used a flexible magnetic disk and held 1.44 MB of data?", a: "Floppy Disk", opts: ["Zip Drive", "Floppy Disk", "CD-ROM", "SSD"] },
+    { q: "What does SSD stand for?", a: "Solid State Drive", opts: ["System Storage Drive", "Solid State Drive", "Secure Storage Device", "Speedy Storage Drive"] },
+    { q: "Which storage technology uses lasers to read and write data?", a: "Optical Storage", opts: ["Magnetic Storage", "Optical Storage", "Solid State Storage", "Cloud Storage"] },
+    { q: "What type of storage is an external hard drive classified as?", a: "Secondary Storage", opts: ["Primary Storage", "Secondary Storage", "Volatile Storage", "Internal Storage"] },
+    { q: "Which memory type temporarily uses a portion of the hard drive when RAM is full?", a: "Virtual Memory", opts: ["Cache Memory", "Virtual Memory", "ROM", "Flash Memory"] },
+    { q: "What type of memory card is commonly used in smartphones and digital cameras?", a: "SD Card", opts: ["SIM Card", "SD Card", "RAM Chip", "Smart Card"] },
+    { q: "In terms of computer storage hierarchy, which one is the slowest but offers the largest capacity?", a: "HDD", opts: ["Cache Memory", "RAM", "Register", "HDD"] },
+    { q: "Which optical disc type allows data to be written, erased, and rewritten multiple times?", a: "CD-RW", opts: ["CD-ROM", "CD-R", "CD-RW", "DVD-R"] }
+];
+
+/* VALUATION PRICING (PER KG) */
+const VAL_SILVER_PER_KG = 20;
+const VAL_GOLD_PER_KG = 80;
+const VAL_DIAMOND_PER_KG = 300;
+
+function calcCash(goldKg, silverKg, diamondKg) {
+    return (goldKg * VAL_GOLD_PER_KG) + (silverKg * VAL_SILVER_PER_KG) + (diamondKg * VAL_DIAMOND_PER_KG);
+}
+function formatMoney(amount) { return '$' + amount.toLocaleString('en-US'); }
+
+/* ================= GAME STATE & SURFACE CONFIG ================= */
+const cv = document.getElementById('mineCanvas'), ctx = cv.getContext('2d');
+let dpr = 1, LOGICAL_WIDTH = 700, LOGICAL_HEIGHT = 460;
+const GOLD_RESPAWN_INTERVAL = 75;
+let goldRespawnTimer = GOLD_RESPAWN_INTERVAL;
+
+const SURFACE_RAIL_Y = 74;
+const SURFACE_GROUND_Y = 82;
+const cartStationP1 = { x: 88, y: 60 }, cartStationP2 = { x: 612, y: 60 };
+
+function initCanvasHD() {
+    const vp = document.querySelector('.mine-viewport');
+    if (vp && vp.clientWidth > 0) LOGICAL_WIDTH = vp.clientWidth;
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = LOGICAL_WIDTH * dpr; cv.height = LOGICAL_HEIGHT * dpr;
+    cv.style.width = '100%'; cv.style.height = LOGICAL_HEIGHT + 'px';
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.scale(dpr, dpr);
+    winch1.minX = 55; winch1.maxX = LOGICAL_WIDTH - 55;
+    winch2.minX = 55; winch2.maxX = LOGICAL_WIDTH - 55;
+    cartStationP1.x = 88; cartStationP2.x = LOGICAL_WIDTH - 88;
+}
+window.addEventListener('resize', () => { if (document.getElementById('screen-game').classList.contains('active')) initCanvasHD(); });
+
+let gameMode = 'duo', timeLeft = 300;
+let gameTimerInterval = null, syncBroadcastInterval = null, animFrameId = null;
+let p1Score = { goldKg: 0, silverKg: 0, diamondKg: 0, count: 0 };
+let p2Score = { goldKg: 0, silverKg: 0, diamondKg: 0, count: 0 };
+
+let winch1 = {
+    x: 180, y: 74, minX: 55, maxX: 645, vx: 2.8, dir: 1, targetX: 180, targetLength: 30, targetGrip: 0.0,
+    length: 30, baseLen: 30, maxLength: 370, state: 'PATROL', shootSpeed: 8.5, retractSpeed: 6.0, grabbedItem: null, locked: false,
+    clawGrip: 0.0, isAnsweringQuiz: false, sway: 0, strainX: 0
+};
+let winch2 = {
+    x: 520, y: 74, minX: 55, maxX: 645, vx: 2.8, dir: -1, targetX: 520, targetLength: 30, targetGrip: 0.0,
+    length: 30, baseLen: 30, maxLength: 370, state: 'PATROL', shootSpeed: 8.5, retractSpeed: 6.0, grabbedItem: null, locked: false,
+    clawGrip: 0.0, isAnsweringQuiz: false, sway: 0, strainX: 0
+};
+
+let activeBuffs = { p1: { turboWinch: 0, mudSlow: 0, midasTouch: false }, p2: { turboWinch: 0, mudSlow: 0, midasTouch: false } };
+let mineObjects = [], nextItemId = 1, particles = [], screenShake = 0, animTick = 0;
+let soilPebbles = [], subterraneanRoots = [], ambientMotes = [];
+
+function initSoilDetails() {
+    soilPebbles = [];
+    for (let i = 0; i < 46; i++) {
+        soilPebbles.push({
+            x: 20 + Math.random() * (LOGICAL_WIDTH - 40), y: 110 + Math.random() * (LOGICAL_HEIGHT - 130),
+            rx: 2.5 + Math.random() * 5, ry: 1.8 + Math.random() * 3.5, rot: Math.random() * Math.PI,
+            shade: (Math.random() > 0.6 ? '#2c180c' : (Math.random() > 0.3 ? '#482513' : '#6b3c20')), specular: Math.random() > 0.6
+        });
+    }
+    subterraneanRoots = [];
+    for (let rx = 35; rx < LOGICAL_WIDTH; rx += 45 + Math.random() * 30) {
+        subterraneanRoots.push({
+            x: rx, y: 90, cp1x: rx + (Math.random() - 0.5) * 20, cp1y: 112 + Math.random() * 20,
+            cp2x: rx + (Math.random() - 0.5) * 25, cp2y: 138 + Math.random() * 30,
+            endX: rx + (Math.random() - 0.5) * 30, endY: 158 + Math.random() * 35, thick: 1.8 + Math.random() * 1.6
+        });
+    }
+    ambientMotes = [];
+    for (let i = 0; i < 20; i++) {
+        ambientMotes.push({
+            x: Math.random() * LOGICAL_WIDTH, y: 100 + Math.random() * (LOGICAL_HEIGHT - 120),
+            r: 0.8 + Math.random() * 1.5, vy: -0.15 - Math.random() * 0.2, vx: (Math.random() - 0.5) * 0.2, phase: Math.random() * Math.PI * 2
+        });
+    }
+}
+initSoilDetails();
+
+/* ================= PEERJS MULTIPLAYER ================= */
+let peer = null, peerConn = null, isOnlineHost = false, myOnlinePlayerNum = 1, isOnlineConnected = false;
+function generateRoomCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let code = '';
+    for (let i = 0; i < 4; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+    return code;
+}
+function initPeerSession(customId, onReady) {
+    if (peer) peer.destroy();
+    peer = new Peer(customId, { debug: 1 });
+    peer.on('open', (id) => { if (onReady) onReady(id); });
+    peer.on('connection', (conn) => { peerConn = conn; setupOnlineConnection(); });
+    peer.on('error', (err) => { toast("Connection warning: " + err.type); });
+}
+
+function hostOnlineRoom() {
+    ensureAudioReady(); const code = generateRoomCode();
+    document.getElementById('online-main-menu').style.display = 'none';
+    document.getElementById('online-waiting-view').style.display = 'block';
+    document.getElementById('display-room-code').innerText = code;
+    initPeerSession('mnr-' + code, () => { isOnlineHost = true; myOnlinePlayerNum = 1; });
+}
+function joinOnlineRoom() {
+    ensureAudioReady(); const code = document.getElementById('join-room-input').value.trim().toUpperCase();
+    if (code.length < 3) { toast("Please enter a valid code!"); return; }
+    initPeerSession(null, () => {
+        isOnlineHost = false; myOnlinePlayerNum = 2;
+        peerConn = peer.connect('mnr-' + code); setupOnlineConnection();
+    });
+}
+function findRandomMatch() {
+    ensureAudioReady(); toast("Finding match..."); const quickPool = 'mnr-lobby-quickmatch';
+    initPeerSession(null, () => {
+        isOnlineHost = false; myOnlinePlayerNum = 2; peerConn = peer.connect(quickPool);
+        peerConn.on('open', () => setupOnlineConnection());
+        setTimeout(() => {
+            if (!isOnlineConnected) {
+                initPeerSession(quickPool, () => {
+                    isOnlineHost = true; myOnlinePlayerNum = 1;
+                    document.getElementById('online-main-menu').style.display = 'none';
+                    document.getElementById('online-waiting-view').style.display = 'block';
+                    document.getElementById('display-room-code').innerText = "RANDOM";
+                });
+            }
+        }, 2200);
+    });
+}
+function setupOnlineConnection() {
+    peerConn.on('open', () => {
+        isOnlineConnected = true; closeOnlineModal(); toast("🎉 Connected with Opponent!");
+        peerConn.send({ type: 'HANDSHAKE', name: myPlayerName, avatarBlook: myAvatarBlook });
+        if (isOnlineHost) {
+            startMode('online');
+            setTimeout(() => {
+                peerConn.send({ type: 'INIT_GAME', mineObjects: mineObjects, timeLeft: timeLeft, respawnTimer: goldRespawnTimer });
+            }, 500);
+        }
+        if (syncBroadcastInterval) clearInterval(syncBroadcastInterval);
+        syncBroadcastInterval = setInterval(() => {
+            if (isOnlineConnected && peerConn && peerConn.open) {
+                const myWinch = (myOnlinePlayerNum === 1) ? winch1 : winch2;
+                peerConn.send({
+                    type: 'SYNC_CLAW_STATE',
+                    player: myOnlinePlayerNum,
+                    x: myWinch.x,
+                    length: myWinch.length,
+                    dir: myWinch.dir,
+                    state: myWinch.state,
+                    clawGrip: myWinch.clawGrip,
+                    grabbedItemId: myWinch.grabbedItem ? myWinch.grabbedItem.id : null
+                });
+            }
+        }, 50);
+    });
+    peerConn.on('data', (data) => handleOnlineDataMessage(data));
+    peerConn.on('close', () => { toast("⚠️ Opponent disconnected!"); isOnlineConnected = false; });
+}
+
+function handleOnlineDataMessage(data) {
+    if (data.type === 'HANDSHAKE') {
+        opponentName = data.name || 'Friend'; opponentAvatarBlook = data.avatarBlook || 'astronaut';
+        updateHUDNames(); peerConn.send({ type: 'HANDSHAKE_REPLY', name: myPlayerName, avatarBlook: myAvatarBlook });
+    } else if (data.type === 'HANDSHAKE_REPLY') {
+        opponentName = data.name || 'Friend'; opponentAvatarBlook = data.avatarBlook || 'astronaut';
+        updateHUDNames();
+    } else if (data.type === 'INIT_GAME') {
+        gameMode = 'online'; startMode('online', true);
+        mineObjects = data.mineObjects; timeLeft = data.timeLeft;
+        goldRespawnTimer = data.respawnTimer || GOLD_RESPAWN_INTERVAL; updateGoldRespawnDisplay();
+    } else if (data.type === 'SYNC_CLAW_STATE') {
+        const targetWinch = (data.player === 1) ? winch1 : winch2;
+        targetWinch.targetX = data.x; targetWinch.targetLength = data.length;
+        targetWinch.targetGrip = data.clawGrip; targetWinch.dir = data.dir; targetWinch.state = data.state;
+        if (data.grabbedItemId) {
+            const it = mineObjects.find(m => m.id === data.grabbedItemId);
+            if (it) {
+                targetWinch.grabbedItem = it;
+                it.visible = false;
+                it.grabbedBy = data.player;
+            }
+        } else if (targetWinch.state === 'PATROL') {
+            targetWinch.grabbedItem = null;
+        }
+    } else if (data.type === 'REMOTE_GRAB') {
+        const targetWinch = (data.player === 1) ? winch1 : winch2;
+        const it = mineObjects.find(m => m.id === data.itemId);
+        if (it) {
+            targetWinch.grabbedItem = it;
+            it.visible = false;
+            it.grabbedBy = data.player;
+        }
+        targetWinch.x = data.clawX; targetWinch.targetX = data.clawX;
+        targetWinch.length = data.clawLength; targetWinch.targetLength = data.clawLength;
+        targetWinch.state = 'HOLD_UNDERGROUND'; targetWinch.clawGrip = 1.0; targetWinch.targetGrip = 1.0;
+    } else if (data.type === 'REMOTE_DROP') {
+        if (data.player === 1) triggerDropWinch(winch1, 1, data.x); else triggerDropWinch(winch2, 2, data.x);
+    } else if (data.type === 'QUIZ_RESOLVED') {
+        const targetScore = (data.player === 1) ? p1Score : p2Score; const w = (data.player === 1) ? winch1 : winch2;
+        if (data.isCorrect) {
+            toast(`✨ ${opponentName} correct! Hauled ${data.oreType.toUpperCase()} (+${data.kg}kg)!`);
+            targetScore.count++;
+            if (data.oreType === 'gold') targetScore.goldKg += data.kg;
+            else if (data.oreType === 'silver') targetScore.silverKg += data.kg;
+            else if (data.oreType === 'diamond') targetScore.diamondKg += data.kg;
+            w.state = 'RETRACT';
+        } else {
+            toast(`💨 ${opponentName} wrong! Ore dropped underground!`);
+            w.state = 'PATROL'; w.clawGrip = 0.0; releaseOreWithPhysics(data.itemId, data.dropX, data.dropY);
+            w.grabbedItem = null; w.locked = false;
+        }
+        updateHUD(); w.isAnsweringQuiz = false;
+    } else if (data.type === 'SYNC_FLUSH_ORES') {
+        mineObjects = data.mineObjects; sfxSparkle(); screenShake = 4; toast("✨ Mine Shift! Ores Refreshed!");
+    } else if (data.type === 'SYNC_TIME') {
+        timeLeft = data.timeLeft; if (data.respawnTimer !== undefined) { goldRespawnTimer = data.respawnTimer; updateGoldRespawnDisplay(); }
+    } else if (data.type === 'PLAYER_LEFT') {
+        toast(`🚪 ${opponentName} left the game!`); setTimeout(() => returnToLobby(), 1200);
+    }
+}
+
+function updateHUDNames() {
+    renderHudBlooks();
+    if (gameMode === 'online') {
+        if (myOnlinePlayerNum === 1) { document.getElementById('p1-label').innerText = `${myPlayerName} (YOU)`; document.getElementById('p2-label').innerText = opponentName; }
+        else { document.getElementById('p1-label').innerText = opponentName; document.getElementById('p2-label').innerText = `${myPlayerName} (YOU)`; }
+    }
+}
+function renderHudBlooks() {
+    const p1c = document.getElementById('hud-blook-p1'), p2c = document.getElementById('hud-blook-p2');
+    if (p1c) { const ctx1 = p1c.getContext('2d'); ctx1.clearRect(0,0,32,32); drawBlook(ctx1, (gameMode === 'online' ? (myOnlinePlayerNum === 1 ? myAvatarBlook : opponentAvatarBlook) : myAvatarBlook), 16, 16, 26); }
+    if (p2c) { const ctx2 = p2c.getContext('2d'); ctx2.clearRect(0,0,32,32); drawBlook(ctx2, (gameMode === 'online' ? (myOnlinePlayerNum === 2 ? myAvatarBlook : opponentAvatarBlook) : (gameMode === 'duo' ? 'astronaut' : 'robot')), 16, 16, 26); }
+}
+
+/* ================= QUIZ ENCOUNTER UNDERGROUND ================= */
+function triggerItemQuiz(playerNum, item, finalKg) {
+    if (gameMode === 'online' && playerNum !== myOnlinePlayerNum) { toast(`⏳ ${opponentName} is answering quiz...`); return; }
+    showSingleQuizCard(playerNum, item, finalKg);
+}
+
+function showSingleQuizCard(playerNum, item, finalKg) {
+    const card = document.getElementById(playerNum === 1 ? 'quiz-card-p1' : 'quiz-card-p2');
+    const qEl = document.getElementById(playerNum === 1 ? 'quiz-p1-q' : 'quiz-p2-q');
+    const optsEl = document.getElementById(playerNum === 1 ? 'quiz-p1-opts' : 'quiz-p2-opts');
+    const tagEl = document.getElementById(playerNum === 1 ? 'quiz-p1-tag' : 'quiz-p2-tag');
+    const rewEl = document.getElementById(playerNum === 1 ? 'quiz-p1-reward' : 'quiz-p2-reward');
+
+    tagEl.innerText = `QUIZ P${playerNum} (${item.type.toUpperCase()})`;
+    rewEl.innerText = `+${finalKg} kg ${item.type.toUpperCase()}`;
+
+    const qData = ICT_BANK[Math.floor(Math.random() * ICT_BANK.length)];
+    qEl.innerText = qData.q; optsEl.innerHTML = '';
+    const shuffled = [...qData.opts].sort(() => Math.random() - 0.5);
+
+    shuffled.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'quiz-btn-opt'; btn.innerText = opt;
+        btn.onclick = () => {
+            const isCorrect = (opt === qData.a);
+            card.style.display = 'none';
+            const w = (playerNum === 1) ? winch1 : winch2, targetScore = (playerNum === 1) ? p1Score : p2Score;
+            const dropX = w.x, dropY = w.y + w.length + 15;
+
+            if (isCorrect) {
+                sfxCorrect();
+                toast(`Correct! Hauling ${item.type.toUpperCase()} (${finalKg} kg)!`);
+                targetScore.count++;
+                if (item.type === 'gold') targetScore.goldKg += finalKg;
+                else if (item.type === 'silver') targetScore.silverKg += finalKg;
+                else if (item.type === 'diamond') targetScore.diamondKg += finalKg;
+                w.isAnsweringQuiz = false; w.state = 'RETRACT';
+            } else {
+                sfxZonk(); toast(`Incorrect! Claw opened & mineral dropped!`);
+                w.clawGrip = 0.0; releaseOreWithPhysics(item.id, dropX, dropY); w.grabbedItem = null;
+                setTimeout(() => { w.isAnsweringQuiz = false; w.state = 'RETRACT_EMPTY'; }, 350);
+            }
+            updateHUD();
+            if (gameMode === 'online' && peerConn && isOnlineConnected) {
+                peerConn.send({ type: 'QUIZ_RESOLVED', player: playerNum, isCorrect: isCorrect, itemId: item.id, oreType: item.type, kg: finalKg, dropX: dropX, dropY: dropY });
+            }
+        };
+        optsEl.appendChild(btn);
+    });
+    card.style.display = 'flex';
+}
+
+function releaseOreWithPhysics(itemId, startX, startY) {
+    const target = mineObjects.find(m => m.id === itemId);
+    if (target) { target.x = startX; target.y = startY; target.visible = true; target.isFalling = true; target.fallVy = 1.2; target.grabbedBy = null; }
+}
+
+function enableShootButtons(playerNum) {
+    if (playerNum === 1) { const b1 = document.getElementById('btn-shoot-p1'); if (b1) b1.disabled = false; }
+    else { const b2 = document.getElementById('btn-shoot-p2'); if (b2) b2.disabled = false; }
+    const bSolo = document.getElementById('btn-shoot-solo'); if (bSolo) bSolo.disabled = false;
+}
+
+function triggerDropWinch(w, pNum, syncX = null) {
+    if (w.locked || w.state !== 'PATROL') return;
+    if (syncX !== null) w.x = syncX;
+    w.locked = true; w.state = 'DROP'; w.clawGrip = 0.0; sfxShoot();
+    if (pNum === 1) { const b = document.getElementById('btn-shoot-p1'); if (b) b.disabled = true; }
+    else { const b = document.getElementById('btn-shoot-p2'); if (b) b.disabled = true; }
+    const bSolo = document.getElementById('btn-shoot-solo'); if (bSolo) bSolo.disabled = true;
+    if (gameMode === 'online' && myOnlinePlayerNum === pNum && peerConn && isOnlineConnected) {
+        peerConn.send({ type: 'REMOTE_DROP', player: pNum, x: w.x });
+    }
+}
+function handleP1Shoot(e) { if (e) { e.preventDefault(); e.stopPropagation(); } triggerDropWinch(winch1, 1); }
+function handleP2Shoot(e) { if (e) { e.preventDefault(); e.stopPropagation(); } triggerDropWinch(winch2, 2); }
+function handleOnlineOrSoloShoot(e) {
+    if (gameMode === 'online') { if (myOnlinePlayerNum === 1) handleP1Shoot(e); else handleP2Shoot(e); }
+    else handleP1Shoot(e);
+}
+
+window.addEventListener('keydown', (e) => {
+    if (e.repeat || !document.getElementById('screen-game').classList.contains('active')) return;
+    if (gameMode === 'online') {
+        if (e.code === 'Space' || e.code === 'KeyS' || e.code === 'ArrowDown' || e.code === 'Enter') { e.preventDefault(); handleOnlineOrSoloShoot(); }
+    } else if (gameMode === 'duo') {
+        if (e.code === 'KeyS' || e.code === 'KeyA') { e.preventDefault(); handleP1Shoot(); }
+        else if (e.code === 'ArrowDown' || e.code === 'Enter') { e.preventDefault(); handleP2Shoot(); }
+    } else {
+        if (e.code === 'Space' || e.code === 'KeyS' || e.code === 'ArrowDown' || e.code === 'Enter') { e.preventDefault(); handleP1Shoot(); }
+    }
+});
+
+/* ================= STRICT ANTI-OVERLAP POSITIONING ================= */
+function findNaturalPosition(minY, maxY, radius, existingItems) {
+    const padX = 75;
+    let bestX = padX + radius, bestY = minY + radius, placed = false;
+    for (let attempt = 0; attempt < 250; attempt++) {
+        const testX = padX + radius + Math.random() * (LOGICAL_WIDTH - (padX * 2) - (radius * 2));
+        const testY = minY + radius + Math.random() * (maxY - minY - (radius * 2));
+        if (Math.hypot(testX - 110, testY - 240) < radius + 46 || Math.hypot(testX - (LOGICAL_WIDTH - 110), testY - 355) < radius + 42) continue;
+        let conflict = false;
+        for (let item of existingItems) {
+            if (!item.visible) continue;
+            if (Math.hypot(testX - item.x, testY - item.y) < (radius + item.r + 28)) { conflict = true; break; }
+        }
+        if (!conflict) { bestX = testX; bestY = testY; placed = true; break; }
+    }
+    if (!placed) {
+        bestX = padX + radius + ((existingItems.length * 68) % (LOGICAL_WIDTH - padX * 2 - radius * 2));
+        bestY = minY + radius + ((existingItems.length * 42) % (maxY - minY - radius * 2));
+    }
+    return { x: bestX, y: bestY };
+}
+
+/* MINERAL CREATION: CRYSTALLINE NUGGETS & PRISMS */
+function createMineralObject(id, type, kg, r, x, y) {
+    const offsets = [];
+    for (let p = 0; p < 10; p++) offsets.push(0.76 + Math.random() * 0.38);
+
+    const crystals = [];
+    const crystalCount = (type === 'gold' || type === 'silver') ? (7 + Math.floor(Math.random() * 5)) : 0;
+    for (let c = 0; c < crystalCount; c++) {
+        const ang = Math.random() * Math.PI * 2;
+        const dist = r * (0.15 + Math.random() * 0.45);
+        crystals.push({
+            cx: Math.cos(ang) * dist, cy: Math.sin(ang) * dist,
+            w: 3.5 + Math.random() * (r * 0.28), h: 5.5 + Math.random() * (r * 0.38),
+            rot: ang + (Math.random() - 0.5) * 0.6
+        });
+    }
+
+    return { 
+        id: id, type: type, kg: kg, r: r, x: x, y: y, originalY: y, 
+        visible: true, isFalling: false, fallVy: 0, grabbedBy: null, 
+        offsets: offsets, crystals: crystals, sparkle: Math.random() * 10 
+    };
+}
+
+/* FULL REFRESH / FLUSH SPAWN: COAL > SILVER > GOLD > DIAMOND */
+function flushAndSpawnMineOres() {
+    // Preserve any ore currently held by a claw so we don't break active hauls!
+    const heldOres = mineObjects.filter(m => m.grabbedBy !== null);
+    mineObjects = [...heldOres];
+
+    // 1. Coal (8 items - Most common)
+    [{ count: 3, minY: 155, maxY: 235 }, { count: 3, minY: 245, maxY: 330 }, { count: 2, minY: 340, maxY: 425 }].forEach(group => {
+        for (let i = 0; i < group.count; i++) {
+            const rad = 20 + Math.random() * 6, pos = findNaturalPosition(group.minY, group.maxY, rad, mineObjects);
+            mineObjects.push(createMineralObject(nextItemId++, 'coal', 0, rad, pos.x, pos.y));
+        }
+    });
+
+    // 2. Perks (2 items)
+    for (let p = 0; p < 2; p++) {
+        const pos = findNaturalPosition(180, 330, 20, mineObjects);
+        mineObjects.push(createMineralObject(nextItemId++, 'perk', 0, 20, pos.x, pos.y));
+    }
+
+    // 3. Silver (5 items)
+    [{ kg: 2, r: 17, minY: 160, maxY: 235 }, { kg: 2, r: 18, minY: 170, maxY: 245 }, { kg: 3, r: 19, minY: 240, maxY: 325 }, { kg: 4, r: 21, minY: 250, maxY: 335 }, { kg: 4, r: 22, minY: 330, maxY: 415 }].forEach(s => {
+        const pos = findNaturalPosition(s.minY, s.maxY, s.r, mineObjects);
+        mineObjects.push(createMineralObject(nextItemId++, 'silver', s.kg, s.r, pos.x, pos.y));
+        addParticles(pos.x, pos.y, 'silver');
+    });
+
+    // 4. Gold (3 items)
+    [{ kg: 4, r: 25, minY: 175, maxY: 250 }, { kg: 6, r: 29, minY: 255, maxY: 340 }, { kg: 10, r: 34, minY: 340, maxY: 425 }].forEach(g => {
+        const pos = findNaturalPosition(g.minY, g.maxY, g.r, mineObjects);
+        mineObjects.push(createMineralObject(nextItemId++, 'gold', g.kg, g.r, pos.x, pos.y));
+        addParticles(pos.x, pos.y, 'gold');
+    });
+
+    // 5. Diamond (Rarest - ~40% chance of 1 diamond spawning, never guaranteed 2-3!)
+    if (Math.random() < 0.42) {
+        const dKg = Math.random() < 0.7 ? 1 : 2;
+        const dR = dKg === 1 ? 14 : 16;
+        const pos = findNaturalPosition(230, 420, dR, mineObjects);
+        mineObjects.push(createMineralObject(nextItemId++, 'diamond', dKg, dR, pos.x, pos.y));
+        addParticles(pos.x, pos.y, 'diamond');
+    }
+}
+
+function updateGoldRespawnDisplay() {
+    const el = document.getElementById('gold-respawn-timer'); if (!el) return;
+    const m = Math.floor(goldRespawnTimer / 60), s = goldRespawnTimer % 60;
+    el.innerText = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+    if (goldRespawnTimer <= 10) { el.style.color = '#e74c3c'; el.style.animation = 'blink 0.5s infinite alternate'; }
+    else { el.style.color = '#f39c12'; el.style.animation = 'none'; }
+}
+
+function startMode(mode, isGuestOnline = false) {
+    ensureAudioReady(); gameMode = mode;
+    if (animFrameId) cancelAnimationFrame(animFrameId);
+    if (gameTimerInterval) clearInterval(gameTimerInterval);
+
+    timeLeft = 300; goldRespawnTimer = GOLD_RESPAWN_INTERVAL; updateGoldRespawnDisplay();
+    p1Score = { goldKg: 0, silverKg: 0, diamondKg: 0, count: 0 };
+    p2Score = { goldKg: 0, silverKg: 0, diamondKg: 0, count: 0 };
+    particles = []; screenShake = 0;
+
+    document.getElementById('quiz-card-p1').style.display = 'none';
+    document.getElementById('quiz-card-p2').style.display = 'none';
+    activeBuffs = { p1: { turboWinch: 0, mudSlow: 0, midasTouch: false }, p2: { turboWinch: 0, mudSlow: 0, midasTouch: false } };
+
+    winch1.minX = 55; winch1.maxX = LOGICAL_WIDTH - 55; winch1.x = 200; winch1.dir = 1;
+    winch2.minX = 55; winch2.maxX = LOGICAL_WIDTH - 55; winch2.x = 480; winch2.dir = -1;
+    winch1.targetX = 200; winch2.targetX = 480;
+
+    if (gameMode === 'duo') {
+        document.getElementById('p2-hud').style.display = 'flex';
+        document.getElementById('controls-dual').style.display = 'flex';
+        document.getElementById('controls-solo').style.display = 'none';
+        document.getElementById('p1-label').innerText = `${myPlayerName} (P1)`;
+        document.getElementById('p2-label').innerText = "Friend (P2)";
+    } else if (gameMode === 'online') {
+        document.getElementById('p2-hud').style.display = 'flex';
+        document.getElementById('controls-dual').style.display = 'none';
+        document.getElementById('controls-solo').style.display = 'block';
+        updateHUDNames();
+    } else {
+        document.getElementById('p2-hud').style.display = 'none';
+        document.getElementById('controls-dual').style.display = 'none';
+        document.getElementById('controls-solo').style.display = 'block';
+        document.getElementById('p1-label').innerText = `${myPlayerName} (YOU)`;
+    }
+
+    resetWinch(winch1, 1);
+    if (gameMode !== 'solo') resetWinch(winch2, 2);
+
+    initCanvasHD(); initSoilDetails(); renderHudBlooks();
+    if (!isGuestOnline) flushAndSpawnMineOres();
+    updateHUD(); showScreen('screen-game');
+    gameTimerInterval = setInterval(gameTimerTick, 1000);
+    animFrameId = requestAnimationFrame(gameLoop);
+}
+
+function resetWinch(w, pNum) {
+    w.state = 'PATROL'; w.length = w.baseLen; w.targetLength = w.baseLen;
+    w.grabbedItem = null; w.locked = false; w.clawGrip = 0.0; w.targetGrip = 0.0;
+    w.sway = 0; w.strainX = 0;
+    w.isAnsweringQuiz = false; enableShootButtons(pNum);
+}
+
+function gameTimerTick() {
+    timeLeft--;
+    const m = Math.floor(timeLeft / 60), s = timeLeft % 60;
+    const timerEl = document.getElementById('game-timer');
+    timerEl.innerText = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+    if (timeLeft <= 30) { timerEl.classList.add('warning'); beep(300, 'square', 0.08, 0.1); }
+    else timerEl.classList.remove('warning');
+
+    // EVERY 75 SECONDS: FULL REFRESH / FLUSH OF ALL ORES!
+    goldRespawnTimer--;
+    if (goldRespawnTimer <= 0) {
+        goldRespawnTimer = GOLD_RESPAWN_INTERVAL;
+        flushAndSpawnMineOres();
+        sfxSparkle(); screenShake = 4; toast("✨ Mine Shift! Ores Refreshed!");
+        if (gameMode === 'online' && isOnlineHost && peerConn && isOnlineConnected) {
+            peerConn.send({ type: 'SYNC_FLUSH_ORES', mineObjects: mineObjects });
+        }
+    }
+    updateGoldRespawnDisplay();
+    if (gameMode === 'online' && isOnlineHost && peerConn && isOnlineConnected) {
+        peerConn.send({ type: 'SYNC_TIME', timeLeft: timeLeft, respawnTimer: goldRespawnTimer });
+    }
+    if (timeLeft <= 0) { clearInterval(gameTimerInterval); endGameByTime(); }
+}
+
+function updateHUD() {
+    document.getElementById('p1-stat').innerText = `${p1Score.goldKg}kg G • ${p1Score.silverKg}kg S • ${p1Score.diamondKg}kg D`;
+    document.getElementById('p2-stat').innerText = `${p2Score.goldKg}kg G • ${p2Score.silverKg}kg S • ${p2Score.diamondKg}kg D`;
+}
+
+/* ================= CLAW WINCH CONTROLS ================= */
+function updateClawMachine(w, pNum) {
+    if (gameMode === 'online' && pNum !== myOnlinePlayerNum) {
+        w.x += (w.targetX - w.x) * 0.35; w.length += (w.targetLength - w.length) * 0.35;
+        w.clawGrip += (w.targetGrip - w.clawGrip) * 0.35; return;
+    }
+    const pBuff = (pNum === 1) ? activeBuffs.p1 : activeBuffs.p2;
+    const speedMod = (pBuff.turboWinch > 0 ? 1.6 : 1) * (pBuff.mudSlow > 0 ? 0.5 : 1);
+
+    if (w.state === 'PATROL') {
+        w.clawGrip += (0.0 - w.clawGrip) * 0.2;
+        w.x += w.vx * w.dir * speedMod;
+        const targetSway = (w.vx * w.dir) * 0.035 + Math.sin(animTick * 3.5) * 0.02;
+        w.sway += (targetSway - w.sway) * 0.12;
+        w.strainX = 0;
+        if (w.x >= w.maxX) { w.x = w.maxX; w.dir = -1; } else if (w.x <= w.minX) { w.x = w.minX; w.dir = 1; }
+    } else if (w.state === 'DROP') {
+        w.clawGrip += (0.0 - w.clawGrip) * 0.2;
+        w.sway *= 0.85;
+        w.strainX = 0;
+        w.length += (w.shootSpeed * (pBuff.turboWinch > 0 ? 1.8 : 1));
+        const tipX = w.x, tipY = w.y + w.length;
+
+        for (let item of mineObjects) {
+            if (item.visible && !item.isFalling && !item.grabbedBy) {
+                if (Math.hypot(tipX - item.x, tipY - item.y) < item.r + 14) {
+                    w.grabbedItem = item; item.grabbedBy = pNum; item.visible = false;
+                    sfxHook(); screenShake = 4; addParticles(item.x, item.y, item.type);
+
+                    // Sync remote grab immediately across network!
+                    if (gameMode === 'online' && peerConn && isOnlineConnected) {
+                        peerConn.send({ type: 'REMOTE_GRAB', player: pNum, itemId: item.id, clawX: w.x, clawLength: w.length });
+                    }
+
+                    if (item.type === 'gold' || item.type === 'silver' || item.type === 'diamond') {
+                        w.state = 'HOLD_UNDERGROUND'; w.clawGrip = 1.0; w.isAnsweringQuiz = true;
+                        let finalWeight = item.kg;
+                        if (pBuff.midasTouch) { finalWeight *= 2; pBuff.midasTouch = false; toast(`🧲 Midas Touch (Ore x2)!`); }
+                        triggerItemQuiz(pNum, item, finalWeight);
+                        return;
+                    } else {
+                        w.state = 'RETRACT'; w.clawGrip = 1.0; return;
+                    }
+                }
+            }
+        }
+        if (w.length >= w.maxLength || tipY >= LOGICAL_HEIGHT - 12) {
+            w.state = 'RETRACT_EMPTY';
+        }
+    } else if (w.state === 'HOLD_UNDERGROUND') {
+        w.clawGrip += (1.0 - w.clawGrip) * 0.3;
+        w.sway *= 0.8;
+    } else if (w.state === 'RETRACT') {
+        w.clawGrip += (1.0 - w.clawGrip) * 0.3;
+        w.sway *= 0.9;
+        if (w.grabbedItem) {
+            w.strainX = Math.sin(animTick * 32) * Math.min(2.2, w.grabbedItem.kg * 0.18);
+        }
+
+        let pullSpeed = w.retractSpeed;
+        if (w.grabbedItem) {
+            if (w.grabbedItem.type === 'coal') pullSpeed = 2.4;
+            else if (w.grabbedItem.type === 'perk') pullSpeed = 7.0;
+            else if (w.grabbedItem.type === 'diamond') pullSpeed = 6.2;
+            else if (w.grabbedItem.type === 'silver') pullSpeed = Math.max(3.2, 7.0 - (w.grabbedItem.kg * 0.2));
+            else pullSpeed = Math.max(2.6, 6.6 - (w.grabbedItem.kg * 0.26));
+        }
+        if (pBuff.turboWinch > 0) pullSpeed *= 1.8;
+        if (pBuff.mudSlow > 0) pullSpeed *= 0.5;
+        w.length -= pullSpeed;
+        if (w.length <= w.baseLen) { w.length = w.baseLen; handleItemDelivered(w, pNum); }
+    } else if (w.state === 'RETRACT_EMPTY') {
+        w.clawGrip += (0.0 - w.clawGrip) * 0.2;
+        w.strainX = 0;
+        w.length -= w.retractSpeed * 1.4;
+        if (w.length <= w.baseLen) { w.length = w.baseLen; resetWinch(w, pNum); }
+    }
+}
+
+function handleItemDelivered(w, pNum) {
+    const it = w.grabbedItem; if (!it) { resetWinch(w, pNum); return; }
+    if (it.type === 'coal') { sfxZonk(); toast(`💣 Coal Zonk!`); it.grabbedBy = null; resetWinch(w, pNum); }
+    else if (it.type === 'perk') { applyRandomPerk(pNum); it.grabbedBy = null; resetWinch(w, pNum); }
+    else { sfxSparkle(); toast(`✨ ${it.type.toUpperCase()} Delivered to Cart!`); it.grabbedBy = null; resetWinch(w, pNum); }
+}
+
+function applyRandomPerk(pNum) {
+    const pBuff = (pNum === 1) ? activeBuffs.p1 : activeBuffs.p2;
+    const perks = [
+        { name: "⚡ Turbo Winch", fn: () => { pBuff.turboWinch = 15; sfxHook(); toast(`⚡ Turbo Winch Active!`); } },
+        { name: "⏳ Bonus Time", fn: () => { timeLeft += 20; sfxHook(); toast("⏳ Bonus Time (+20s)!"); } },
+        { name: "🧲 Midas Touch", fn: () => { pBuff.midasTouch = true; sfxHook(); toast(`🧲 Midas Touch (x2 Weight)!`); } },
+        { name: "🐌 Sticky Mud", fn: () => { pBuff.mudSlow = 12; sfxZonk(); toast(`🐌 Trapped in Mud!`); } }
+    ];
+    perks[Math.floor(Math.random() * perks.length)].fn();
+}
+
+function drawDiamondCrossGlint(gctx, x, y, sz, rot, alpha) {
+    if (alpha <= 0) return;
+    gctx.save(); gctx.translate(x, y); gctx.rotate(rot);
+    gctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+    gctx.beginPath();
+    gctx.moveTo(0, -sz); gctx.quadraticCurveTo(0, 0, sz * 0.2, 0); gctx.lineTo(sz, 0);
+    gctx.quadraticCurveTo(0, 0, 0, sz * 0.2); gctx.lineTo(0, sz); gctx.quadraticCurveTo(0, 0, -sz * 0.2, 0);
+    gctx.lineTo(-sz, 0); gctx.quadraticCurveTo(0, 0, 0, -sz * 0.2); gctx.closePath(); gctx.fill();
+    gctx.restore();
+}
+
+function gameLoop() {
+    if (!document.getElementById('screen-game').classList.contains('active')) return;
+    animTick += 0.05;
+    let shakeX = 0, shakeY = 0;
+    if (screenShake > 0) {
+        shakeX = (Math.random() - 0.5) * screenShake; shakeY = (Math.random() - 0.5) * screenShake;
+        screenShake *= 0.82; if (screenShake < 0.3) screenShake = 0;
+    }
+    ctx.save(); ctx.translate(shakeX, shakeY);
+    ctx.clearRect(-10, -10, LOGICAL_WIDTH + 20, LOGICAL_HEIGHT + 20);
+    updateClawMachine(winch1, 1); if (gameMode !== 'solo') updateClawMachine(winch2, 2);
+
+    mineObjects.forEach(it => {
+        if (it.isFalling) {
+            it.fallVy += 0.55; it.y += it.fallVy;
+            if (it.y >= it.originalY) {
+                it.y = it.originalY; it.isFalling = false; it.fallVy = 0;
+                screenShake = 5; sfxDrop(); addParticles(it.x, it.y, it.type);
+            }
+        }
+    });
+    renderMineWorld(); updateAndDrawParticles();
+    ctx.restore(); animFrameId = requestAnimationFrame(gameLoop);
+}
+
+/* ================= RENDERING MINE ENVIRONMENT ================= */
+function renderMineWorld() {
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, SURFACE_RAIL_Y);
+    skyGrad.addColorStop(0, '#2980b9'); skyGrad.addColorStop(0.65, '#6dd5fa'); skyGrad.addColorStop(1, '#a8e6cf');
+    ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, LOGICAL_WIDTH, SURFACE_RAIL_Y);
+
+    const dirtGrad = ctx.createLinearGradient(0, SURFACE_GROUND_Y, 0, LOGICAL_HEIGHT);
+    dirtGrad.addColorStop(0.00, '#66391d'); dirtGrad.addColorStop(0.28, '#502a15');
+    dirtGrad.addColorStop(0.65, '#3b1d0c'); dirtGrad.addColorStop(1.00, '#200f06');
+    ctx.fillStyle = dirtGrad; ctx.fillRect(0, SURFACE_GROUND_Y, LOGICAL_WIDTH, LOGICAL_HEIGHT - SURFACE_GROUND_Y);
+
+    ctx.save();
+    [175, 275, 375].forEach(ly => {
+        ctx.strokeStyle = 'rgba(25, 12, 5, 0.45)'; ctx.lineWidth = 4.5;
+        ctx.beginPath(); ctx.moveTo(0, ly); ctx.bezierCurveTo(LOGICAL_WIDTH * 0.3, ly - 8, LOGICAL_WIDTH * 0.7, ly + 9, LOGICAL_WIDTH, ly - 3); ctx.stroke();
+        ctx.strokeStyle = 'rgba(255, 234, 167, 0.12)'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0, ly + 2.5); ctx.bezierCurveTo(LOGICAL_WIDTH * 0.3, ly - 6, LOGICAL_WIDTH * 0.7, ly + 11, LOGICAL_WIDTH, ly - 1); ctx.stroke();
+    });
+
+    ctx.strokeStyle = '#3e1f0e'; ctx.lineCap = 'round';
+    subterraneanRoots.forEach(rt => {
+        ctx.lineWidth = rt.thick; ctx.beginPath(); ctx.moveTo(rt.x, rt.y);
+        ctx.bezierCurveTo(rt.cp1x, rt.cp1y, rt.cp2x, rt.cp2y, rt.endX, rt.endY); ctx.stroke();
+    });
+
+    soilPebbles.forEach(p => {
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = p.shade;
+        ctx.beginPath(); ctx.ellipse(0, 0, p.rx, p.ry, 0, 0, Math.PI * 2); ctx.fill();
+        if (p.specular) { ctx.fillStyle = 'rgba(255, 243, 196, 0.45)'; ctx.beginPath(); ctx.arc(-1, -1, 1.2, 0, Math.PI*2); ctx.fill(); }
+        ctx.restore();
+    });
+
+    ambientMotes.forEach(mt => {
+        mt.y += mt.vy; mt.x += mt.vx + Math.sin(animTick + mt.phase) * 0.15;
+        if (mt.y < 95) mt.y = LOGICAL_HEIGHT - 20;
+        const moteAlpha = 0.25 + Math.sin(animTick * 2 + mt.phase) * 0.2;
+        ctx.fillStyle = `rgba(255, 234, 167, ${Math.max(0, moteAlpha)})`; ctx.beginPath(); ctx.arc(mt.x, mt.y, mt.r, 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.restore();
+
+    drawDinosaurSkullHD(115, 235);
+    drawAmmoniteAndRibsHD(LOGICAL_WIDTH - 115, 350);
+
+    mineObjects.forEach(it => {
+        if (!it.visible) return;
+        it.sparkle += 0.045;
+        ctx.save(); ctx.fillStyle = 'rgba(18, 9, 4, 0.45)';
+        ctx.beginPath(); ctx.ellipse(it.x, it.y + it.r * 0.38, it.r * 1.15, it.r * 0.75, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        if (it.type === 'gold') drawGoldHD(it.x, it.y, it.r, it.kg, it.offsets, it.crystals, it.sparkle);
+        else if (it.type === 'silver') drawSilverHD(it.x, it.y, it.r, it.kg, it.offsets, it.crystals, it.sparkle);
+        else if (it.type === 'diamond') drawDiamondHD(it.x, it.y, it.r, it.kg, it.sparkle);
+        else if (it.type === 'coal') drawCoalHD(it.x, it.y, it.r, it.offsets);
+        else if (it.type === 'perk') drawPerkBoxHD(it.x, it.y, it.r, it.sparkle);
+    });
+
+    drawGroundBorderAndTracks();
+
+    const p1Blook = (gameMode === 'online') ? ((myOnlinePlayerNum === 1) ? myAvatarBlook : opponentAvatarBlook) : myAvatarBlook;
+    const p2Blook = (gameMode === 'online') ? ((myOnlinePlayerNum === 2) ? myAvatarBlook : opponentAvatarBlook) : (gameMode === 'duo' ? 'astronaut' : 'robot');
+    let p1CartName = (gameMode === 'online') ? (myOnlinePlayerNum === 1 ? `${myPlayerName} (YOU)` : opponentName) : (gameMode === 'solo' ? `${myPlayerName} (YOU)` : `${myPlayerName} (P1)`);
+    let p2CartName = (gameMode === 'online') ? (myOnlinePlayerNum === 2 ? `${myPlayerName} (YOU)` : opponentName) : `Friend (P2)`;
+
+    drawStationaryCart(cartStationP1.x, cartStationP1.y, '#ff4757', p1Blook, 1, winch1, p1CartName);
+    if (gameMode !== 'solo') drawStationaryCart(cartStationP2.x, cartStationP2.y, '#2ed573', p2Blook, 2, winch2, p2CartName);
+
+    const isP1You = (gameMode === 'online') ? (myOnlinePlayerNum === 1) : true;
+    const isP2You = (gameMode === 'online') ? (myOnlinePlayerNum === 2) : false;
+    let p1ClawLabel = (gameMode === 'online') ? (myOnlinePlayerNum === 1 ? `${myPlayerName}` : opponentName) : (gameMode === 'solo' ? `${myPlayerName}` : `P1 • ${myPlayerName}`);
+    let p2ClawLabel = (gameMode === 'online') ? (myOnlinePlayerNum === 2 ? `${myPlayerName}` : opponentName) : `P2 • Friend`;
+
+    drawCartoonClawMachine(winch1, '#ff4757', p1ClawLabel, isP1You, (gameMode !== 'solo' ? winch2 : null), 1);
+    if (gameMode !== 'solo') drawCartoonClawMachine(winch2, '#2ed573', p2ClawLabel, isP2You, winch1, 2);
+}
+
+function drawGroundBorderAndTracks() {
+    ctx.fillStyle = '#374151'; ctx.fillRect(0, SURFACE_RAIL_Y - 4, LOGICAL_WIDTH, 5);
+    for (let bx = 4; bx < LOGICAL_WIDTH; bx += 26) {
+        ctx.fillStyle = '#5c3a21'; ctx.fillRect(bx, SURFACE_RAIL_Y - 2, 18, 10);
+        ctx.fillStyle = '#3e2415'; ctx.fillRect(bx + 3, SURFACE_RAIL_Y, 3, 3); ctx.fillRect(bx + 12, SURFACE_RAIL_Y, 3, 3);
+    }
+    ctx.fillStyle = '#78909c'; ctx.fillRect(0, SURFACE_RAIL_Y, LOGICAL_WIDTH, 4.5);
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, SURFACE_RAIL_Y, LOGICAL_WIDTH, 1.2);
+    const grassGrad = ctx.createLinearGradient(0, SURFACE_RAIL_Y + 4, 0, SURFACE_GROUND_Y + 8);
+    grassGrad.addColorStop(0, '#2ecc71'); grassGrad.addColorStop(1, '#27ae60');
+    ctx.fillStyle = grassGrad; ctx.fillRect(0, SURFACE_RAIL_Y + 4, LOGICAL_WIDTH, 13);
+}
+
+function drawStationaryCart(x, y, primaryColor, blookId, pNum, winchRef, playerName) {
+    const breathBob = Math.sin(animTick * 2.8 + (pNum === 2 ? 1.5 : 0)) * 1.5;
+    const isBlinking = (Math.sin(animTick * 0.7 + pNum * 2) > 0.95);
+    ctx.save(); ctx.translate(x, y);
+
+    const steamPulse = (animTick * 2 + pNum) % 3;
+    if (steamPulse < 1.4) {
+        ctx.fillStyle = `rgba(236, 240, 241, ${0.45 - steamPulse * 0.25})`;
+        ctx.beginPath(); ctx.arc(-22 - steamPulse * 2, -12 - steamPulse * 7, 3 + steamPulse * 2.5, 0, Math.PI * 2); ctx.fill();
+    }
+
+    ctx.fillStyle = '#8d6e63'; ctx.beginPath(); ctx.roundRect(-28, 0, 56, 24, 6); ctx.fill();
+    ctx.fillStyle = primaryColor; ctx.fillRect(-28, 0, 7, 24); ctx.fillRect(21, 0, 7, 24); ctx.fillRect(-28, 17, 56, 7);
+    ctx.fillStyle = '#263238'; ctx.beginPath(); ctx.arc(-16, 24, 7.5, 0, Math.PI * 2); ctx.arc(16, 24, 7.5, 0, Math.PI * 2); ctx.fill();
+
+    ctx.save();
+    ctx.translate(14, 10);
+    ctx.rotate(animTick * 1.5);
+    ctx.strokeStyle = '#f39c12'; ctx.lineWidth = 2.2;
+    ctx.strokeRect(-4, -4, 8, 8);
+    ctx.restore();
+
+    ctx.save(); ctx.translate(0, -6 + breathBob); drawBlook(ctx, blookId, 0, 0, 24, isBlinking, breathBob * 0.3); ctx.restore();
+
+    ctx.save(); ctx.translate(0, -32 + breathBob);
+    ctx.font = '900 11px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const nw = ctx.measureText(playerName).width + 16;
+    ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.roundRect(-nw/2 + 1, -9 + 1, nw, 18, 9); ctx.fill();
+    ctx.fillStyle = playerName.includes('(YOU)') ? '#ffeaa7' : '#ffffff';
+    ctx.strokeStyle = primaryColor; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.roundRect(-nw/2, -9, nw, 18, 9); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#1e293b'; ctx.fillText(playerName, 0, 0); ctx.restore();
+    ctx.restore();
+}
+
+/* SMART CLAW WITH ARTICULATED VISUALS & HYDRAULICS */
+function drawCartoonClawMachine(w, color, displayName, isYou, otherWinch, pNum) {
+    const tipX = Math.round(w.x + (w.strainX || 0));
+    const tipY = Math.round(w.y + w.length);
+
+    ctx.save();
+    const spotGrad = ctx.createRadialGradient(tipX, tipY, 4, tipX, tipY + 45, 55);
+    spotGrad.addColorStop(0, 'rgba(255, 255, 255, 0.22)'); spotGrad.addColorStop(0.5, 'rgba(255, 242, 175, 0.08)'); spotGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = spotGrad; ctx.beginPath(); ctx.moveTo(tipX - 10, tipY); ctx.lineTo(tipX + 10, tipY); ctx.lineTo(tipX + 45, tipY + 70); ctx.lineTo(tipX - 45, tipY + 70); ctx.closePath(); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    let badgeY = SURFACE_RAIL_Y - 24;
+    // Stagger horizontally or vertically if claws cross paths to prevent bubble collision
+    if (otherWinch && Math.abs(w.x - otherWinch.x) < 70) badgeY = (pNum === 1) ? (SURFACE_RAIL_Y - 34) : (SURFACE_RAIL_Y - 14);
+    ctx.translate(tipX, badgeY);
+    ctx.font = isYou ? '900 12px Nunito, sans-serif' : '900 11px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const tw = ctx.measureText(displayName).width, bw = Math.max(tw + 16, 52);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.28)'; ctx.beginPath(); ctx.roundRect(Math.round(-bw / 2) + 1, -8 + 1, bw, 18, 9); ctx.fill();
+    ctx.fillStyle = isYou ? '#ffeaa7' : '#ffffff'; ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.roundRect(Math.round(-bw / 2), -8, bw, 18, 9); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = isYou ? '#b71540' : '#1e293b'; ctx.fillText(displayName, 0, 1);
+    ctx.restore();
+
+    ctx.save(); ctx.translate(tipX, SURFACE_RAIL_Y); ctx.fillStyle = '#2f3542'; ctx.beginPath(); ctx.roundRect(-14, -5, 28, 8, 3); ctx.fill();
+    ctx.fillStyle = color; ctx.beginPath(); ctx.roundRect(-10, 1, 20, 8, 3); ctx.fill();
+    ctx.fillStyle = '#a4b0be'; ctx.beginPath(); ctx.arc(-8, -1, 3, 0, Math.PI*2); ctx.arc(8, -1, 3, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.strokeStyle = '#1e272e'; ctx.lineWidth = 4.2;
+    ctx.beginPath(); ctx.moveTo(w.x, SURFACE_RAIL_Y + 5); ctx.lineTo(tipX, tipY); ctx.stroke();
+    ctx.strokeStyle = '#dcdde1'; ctx.lineWidth = 2.2;
+    ctx.setLineDash([4, 2]);
+    ctx.beginPath(); ctx.moveTo(w.x, SURFACE_RAIL_Y + 5); ctx.lineTo(tipX, tipY); ctx.stroke();
+    ctx.restore();
+
+    // Draw grabbed mineral directly clamped inside the claw jaws
+    if (w.grabbedItem) {
+        const gi = w.grabbedItem;
+        if (gi.type === 'gold') drawGoldHD(tipX, tipY + 16, gi.r, gi.kg, gi.offsets, gi.crystals, 0);
+        else if (gi.type === 'silver') drawSilverHD(tipX, tipY + 16, gi.r, gi.kg, gi.offsets, gi.crystals, 0);
+        else if (gi.type === 'diamond') drawDiamondHD(tipX, tipY + 14, gi.r, gi.kg, 0);
+        else if (gi.type === 'coal') drawCoalHD(tipX, tipY + 16, gi.r, gi.offsets);
+        else if (gi.type === 'perk') drawPerkBoxHD(tipX, tipY + 16, gi.r, 0);
+    }
+
+    ctx.save();
+    ctx.translate(tipX, tipY);
+    ctx.rotate(w.sway || 0);
+
+    ctx.fillStyle = '#747d8c'; ctx.fillRect(-4, -22, 8, 22);
+    ctx.fillStyle = '#f1f2f6'; ctx.fillRect(-2, -18, 4, 18);
+
+    ctx.fillStyle = '#2f3542';
+    ctx.beginPath(); ctx.roundRect(-16, -14, 32, 16, 5); ctx.fill();
+    ctx.fillStyle = color; ctx.fillRect(-12, -10, 24, 8);
+
+    let indCol = '#2ed573';
+    if (w.state === 'HOLD_UNDERGROUND') indCol = '#f1c40f'; else if (w.state === 'RETRACT_EMPTY') indCol = '#ff4757';
+    ctx.fillStyle = indCol; ctx.beginPath(); ctx.arc(0, -6, 3, 0, Math.PI * 2); ctx.fill();
+
+    ctx.fillStyle = '#57606f'; ctx.beginPath(); ctx.arc(0, 6, 7.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(0, 6, 2.8, 0, Math.PI * 2); ctx.fill();
+
+    const gripRad = (w.clawGrip * 0.78) - 0.36;
+
+    ctx.save();
+    ctx.translate(-7, 6);
+    ctx.rotate(gripRad);
+    ctx.fillStyle = '#747d8c'; ctx.strokeStyle = '#2f3542'; ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(0, 0); ctx.lineTo(-13, 14); ctx.lineTo(-6, 32); ctx.lineTo(0, 30); ctx.lineTo(-6, 14);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.moveTo(-6, 32); ctx.lineTo(-1, 30); ctx.lineTo(-2, 35); ctx.closePath(); ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(7, 6);
+    ctx.rotate(-gripRad);
+    ctx.fillStyle = '#747d8c'; ctx.strokeStyle = '#2f3542'; ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(0, 0); ctx.lineTo(13, 14); ctx.lineTo(6, 32); ctx.lineTo(0, 30); ctx.lineTo(6, 14);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.moveTo(6, 32); ctx.lineTo(1, 30); ctx.lineTo(2, 35); ctx.closePath(); ctx.fill();
+    ctx.restore();
+
+    ctx.restore();
+}
+
+/* ================= PREHISTORIC FOSSILS ================= */
+function drawDinosaurSkullHD(x, y) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    ctx.fillStyle = 'rgba(25, 12, 5, 0.55)';
+    ctx.beginPath(); ctx.ellipse(0, 0, 52, 34, -0.06, 0, Math.PI * 2); ctx.fill();
+
+    ctx.fillStyle = '#e8dcc4';
+    ctx.strokeStyle = '#8d785a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-35, 14); ctx.lineTo(25, 12); ctx.lineTo(28, 6); ctx.lineTo(-20, 6); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle = '#ffffff';
+    for (let gx = -15; gx <= 20; gx += 6) {
+        ctx.beginPath(); ctx.moveTo(gx, 6); ctx.lineTo(gx + 2.5, 1); ctx.lineTo(gx + 5, 6); ctx.fill();
+    }
+
+    ctx.fillStyle = '#f5f0e1';
+    ctx.beginPath();
+    ctx.moveTo(-38, 2);
+    ctx.lineTo(-42, -18);
+    ctx.quadraticCurveTo(-20, -32, 12, -26);
+    ctx.lineTo(36, -10);
+    ctx.lineTo(38, 4);
+    ctx.lineTo(0, 2);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle = '#1c1008';
+    ctx.beginPath(); ctx.ellipse(-8, -14, 7, 9, 0.18, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(12, -12, 5, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(28, -7, 3, 0, Math.PI * 2); ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    for (let gx = -5; gx <= 30; gx += 6) {
+        ctx.beginPath(); ctx.moveTo(gx, 3); ctx.lineTo(gx + 2.5, 9); ctx.lineTo(gx + 5, 3); ctx.fill();
+    }
+    ctx.restore();
+}
+
+function drawAmmoniteAndRibsHD(x, y) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = 'rgba(25, 12, 5, 0.55)';
+    ctx.beginPath(); ctx.ellipse(0, 0, 46, 30, 0.1, 0, Math.PI * 2); ctx.fill();
+
+    ctx.strokeStyle = '#e8dcc4'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    [-24, -14, -4, 6].forEach(rx => {
+        ctx.beginPath(); ctx.moveTo(rx, -10); ctx.quadraticCurveTo(rx + 6, 8, rx - 3, 16); ctx.stroke();
+    });
+
+    ctx.save();
+    ctx.translate(22, 2);
+    ctx.strokeStyle = '#f5f0e1'; ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    let ang = 0;
+    for (let r = 2; r < 14; r += 0.8) {
+        ang += 0.45;
+        const px = Math.cos(ang) * r, py = Math.sin(ang) * r;
+        if (r === 2) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    ctx.restore();
+    ctx.restore();
+}
+
+/* ================= MINERAL ORE GRAPHICS (NO COAL BACKGROUND) ================= */
+
+/* 1. STANDALONE BRILLIANT DIAMOND */
+function drawDiamondHD(x, y, r, kg, time) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    const pulse = 0.35 + Math.sin(time * 3.8) * 0.15;
+    const diaAura = ctx.createRadialGradient(0, 0, r * 0.2, 0, 0, r + 11);
+    diaAura.addColorStop(0, `rgba(255, 255, 255, ${pulse + 0.2})`);
+    diaAura.addColorStop(0.5, `rgba(0, 210, 211, ${pulse})`);
+    diaAura.addColorStop(1, 'transparent');
+    ctx.fillStyle = diaAura;
+    ctx.beginPath(); ctx.arc(0, 0, r + 11, 0, Math.PI * 2); ctx.fill();
+
+    const w = r * 1.3, h = r * 1.4;
+    ctx.beginPath();
+    ctx.moveTo(0, h * 0.75);
+    ctx.lineTo(-w * 0.75, -h * 0.05);
+    ctx.lineTo(-w * 0.45, -h * 0.65);
+    ctx.lineTo(w * 0.45, -h * 0.65);
+    ctx.lineTo(w * 0.75, -h * 0.05);
+    ctx.closePath();
+
+    const dg = ctx.createLinearGradient(-w, -h, w, h);
+    dg.addColorStop(0, '#ffffff');
+    dg.addColorStop(0.3, '#70a1ff');
+    dg.addColorStop(0.65, '#00d2d3');
+    dg.addColorStop(1, '#0984e3');
+    ctx.fillStyle = dg; ctx.fill();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.2; ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)'; ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(-w * 0.75, -h * 0.05); ctx.lineTo(w * 0.75, -h * 0.05);
+    ctx.moveTo(-w * 0.45, -h * 0.65); ctx.lineTo(0, -h * 0.05); ctx.lineTo(w * 0.45, -h * 0.65);
+    ctx.moveTo(0, -h * 0.05); ctx.lineTo(0, h * 0.75);
+    ctx.stroke();
+
+    const glintPhase = (Math.sin(time * 4.5) + 1) / 2;
+    drawDiamondCrossGlint(ctx, -w * 0.35, -h * 0.4, 6.5, time * 2.5, glintPhase);
+
+    ctx.fillStyle = '#00d2d3';
+    ctx.font = '900 11px Fredoka One'; ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 4;
+    ctx.fillText(`${kg}kg`, 0, r + 13);
+    ctx.restore();
+}
+
+/* 2. NATURAL RAW GOLD CRYSTALLINE CLUSTER (NO BLACK COAL BACKING) */
+function drawGoldHD(x, y, r, kg, offsets, crystals, time) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Warm golden luminescent aura
+    const auraPulse = 0.28 + Math.sin(time * 2.8) * 0.12;
+    const goldAura = ctx.createRadialGradient(0, 0, r * 0.2, 0, 0, r + 13);
+    goldAura.addColorStop(0, `rgba(255, 242, 175, ${auraPulse + 0.15})`);
+    goldAura.addColorStop(0.55, `rgba(241, 196, 15, ${auraPulse * 0.8})`);
+    goldAura.addColorStop(1, 'transparent');
+    ctx.fillStyle = goldAura;
+    ctx.beginPath(); ctx.arc(0, 0, r + 13, 0, Math.PI * 2); ctx.fill();
+
+    // Natural Raw Gold Nugget Cluster Body (Deep metallic amber with quartz bevels)
+    ctx.beginPath();
+    for (let i = 0; i < offsets.length; i++) {
+        const ang = (i / offsets.length) * Math.PI * 2, rad = r * offsets[i];
+        const px = Math.cos(ang) * rad, py = Math.sin(ang) * rad;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    const gGrad = ctx.createLinearGradient(-r, -r, r, r);
+    gGrad.addColorStop(0, '#fff6b0');
+    gGrad.addColorStop(0.25, '#f1c40f');
+    gGrad.addColorStop(0.65, '#e67e22');
+    gGrad.addColorStop(1, '#b7791f');
+    ctx.fillStyle = gGrad; ctx.fill();
+    ctx.strokeStyle = '#b7791f'; ctx.lineWidth = 2.5; ctx.stroke();
+
+    // Specular faceted planes & quartz matrix veins within the gold
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)'; ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.5, -r * 0.3); ctx.lineTo(-r * 0.1, 0); ctx.lineTo(-r * 0.3, r * 0.45);
+    ctx.moveTo(r * 0.2, -r * 0.5); ctx.lineTo(0, 0); ctx.lineTo(r * 0.45, r * 0.3);
+    ctx.stroke();
+
+    // Natural 3D gold crystal prisms radiating organically
+    if (crystals && crystals.length) {
+        crystals.forEach(cr => {
+            ctx.save();
+            ctx.translate(cr.cx, cr.cy);
+            ctx.rotate(cr.rot);
+
+            const cg = ctx.createLinearGradient(-cr.w, -cr.h, cr.w, cr.h);
+            cg.addColorStop(0, '#ffffff');
+            cg.addColorStop(0.3, '#f9ca24');
+            cg.addColorStop(0.85, '#d35400');
+            cg.addColorStop(1, '#8c4a00');
+            ctx.fillStyle = cg;
+
+            ctx.beginPath();
+            ctx.moveTo(0, -cr.h * 0.7);
+            ctx.lineTo(cr.w * 0.55, -cr.h * 0.2);
+            ctx.lineTo(cr.w * 0.45, cr.h * 0.6);
+            ctx.lineTo(-cr.w * 0.45, cr.h * 0.6);
+            ctx.lineTo(-cr.w * 0.55, -cr.h * 0.2);
+            ctx.closePath();
+            ctx.fill();
+
+            // Shiny crystal ridge
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+            ctx.beginPath();
+            ctx.moveTo(0, -cr.h * 0.7);
+            ctx.lineTo(cr.w * 0.55, -cr.h * 0.2);
+            ctx.lineTo(0, cr.h * 0.5);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.restore();
+        });
+    }
+
+    const glintPhase = (Math.sin(time * 3.5) + 1) / 2;
+    drawDiamondCrossGlint(ctx, -r * 0.35, -r * 0.3, 7.5, time * 2, glintPhase);
+    drawDiamondCrossGlint(ctx, r * 0.35, r * 0.25, 5.5, -time * 1.8, 1 - glintPhase);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 12px Fredoka One'; ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 4;
+    ctx.fillText(`${kg}kg`, 0, r + 14);
+    ctx.restore();
+}
+
+/* 3. NATURAL RAW SILVER CRYSTALLINE CLUSTER (NO BLACK COAL BACKING) */
+function drawSilverHD(x, y, r, kg, offsets, crystals, time) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    const silverPulse = 0.22 + Math.sin(time * 3.2) * 0.1;
+    const silverAura = ctx.createRadialGradient(0, 0, r * 0.2, 0, 0, r + 12);
+    silverAura.addColorStop(0, `rgba(255, 255, 255, ${silverPulse + 0.15})`);
+    silverAura.addColorStop(0.55, `rgba(220, 221, 225, ${silverPulse * 0.75})`);
+    silverAura.addColorStop(1, 'transparent');
+    ctx.fillStyle = silverAura;
+    ctx.beginPath(); ctx.arc(0, 0, r + 12, 0, Math.PI * 2); ctx.fill();
+
+    // Raw Silver Crystalline Body
+    ctx.beginPath();
+    for (let i = 0; i < offsets.length; i++) {
+        const ang = (i / offsets.length) * Math.PI * 2, rad = r * offsets[i];
+        const px = Math.cos(ang) * rad, py = Math.sin(ang) * rad;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    const sGrad = ctx.createLinearGradient(-r, -r, r, r);
+    sGrad.addColorStop(0, '#ffffff');
+    sGrad.addColorStop(0.3, '#dcdde1');
+    sGrad.addColorStop(0.7, '#718093');
+    sGrad.addColorStop(1, '#485460');
+    ctx.fillStyle = sGrad; ctx.fill();
+    ctx.strokeStyle = '#718093'; ctx.lineWidth = 2.4; ctx.stroke();
+
+    // Geometric Chrome Prisms
+    if (crystals && crystals.length) {
+        crystals.forEach(cr => {
+            ctx.save();
+            ctx.translate(cr.cx, cr.cy);
+            ctx.rotate(cr.rot);
+
+            const sg = ctx.createLinearGradient(-cr.w, -cr.h, cr.w, cr.h);
+            sg.addColorStop(0, '#ffffff');
+            sg.addColorStop(0.4, '#dcdde1');
+            sg.addColorStop(0.8, '#718093');
+            sg.addColorStop(1, '#3d4852');
+            ctx.fillStyle = sg;
+
+            ctx.beginPath();
+            ctx.moveTo(0, -cr.h * 0.7);
+            ctx.lineTo(cr.w * 0.55, -cr.h * 0.2);
+            ctx.lineTo(cr.w * 0.45, cr.h * 0.6);
+            ctx.lineTo(-cr.w * 0.45, cr.h * 0.6);
+            ctx.lineTo(-cr.w * 0.55, -cr.h * 0.2);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+            ctx.beginPath();
+            ctx.moveTo(0, -cr.h * 0.7);
+            ctx.lineTo(cr.w * 0.55, -cr.h * 0.2);
+            ctx.lineTo(0, cr.h * 0.5);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.restore();
+        });
+    }
+
+    const glintPhase = (Math.sin(time * 4) + 1) / 2;
+    drawDiamondCrossGlint(ctx, -r * 0.35, -r * 0.25, 6.5, time * 2.2, glintPhase);
+
+    ctx.fillStyle = '#f1f2f6';
+    ctx.font = '900 11px Fredoka One'; ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 4;
+    ctx.fillText(`${kg}kg`, 0, r + 13);
+    ctx.restore();
+}
+
+/* 4. COAL IS THE ONLY BLACK ANTHRACITE ROCK */
+function drawCoalHD(x, y, r, offsets) {
+    ctx.save(); ctx.translate(x, y);
+    ctx.beginPath();
+    for (let i = 0; i < offsets.length; i++) {
+        const ang = (i / offsets.length) * Math.PI * 2, rad = r * offsets[i];
+        const px = Math.cos(ang) * rad, py = Math.sin(ang) * rad;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    const cg = ctx.createLinearGradient(-r, -r, r, r);
+    cg.addColorStop(0, '#353b48'); cg.addColorStop(0.45, '#1e272e'); cg.addColorStop(1, '#05070a');
+    ctx.fillStyle = cg; ctx.fill();
+    ctx.strokeStyle = '#05070a'; ctx.lineWidth = 3.2; ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.beginPath(); ctx.moveTo(-r * 0.4, -r * 0.5); ctx.lineTo(r * 0.1, -r * 0.6); ctx.lineTo(-r * 0.1, -r * 0.1); ctx.closePath(); ctx.fill();
+
+    ctx.fillStyle = '#9ca3af'; ctx.font = 'bold 12px Fredoka One'; ctx.textAlign = 'center';
+    ctx.fillText("><", 0, 3);
+    ctx.restore();
+}
+
+function drawPerkBoxHD(x, y, r, time) {
+    ctx.save(); ctx.translate(x, y);
+    ctx.fillStyle = 'rgba(230, 126, 34, 0.35)'; ctx.beginPath(); ctx.arc(0, 0, r + 6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#d35400'; ctx.fillRect(-r, -r, r * 2, r * 2);
+    ctx.strokeStyle = '#f39c12'; ctx.lineWidth = 2.5; ctx.strokeRect(-r, -r, r * 2, r * 2);
+    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 16px Fredoka One'; ctx.textAlign = 'center'; ctx.fillText("?", 0, 6);
+    ctx.restore();
+}
+
+function addParticles(x, y, type) {
+    let col = '#4b5563';
+    if (type === 'gold') col = '#f1c40f';
+    else if (type === 'silver') col = '#dcdde1';
+    else if (type === 'diamond') col = '#00d2d3';
+    for (let i = 0; i < 14; i++) {
+        particles.push({
+            x: x, y: y, vx: (Math.random() - 0.5) * 5, vy: (Math.random() - 0.5) * 5 - 1.5,
+            size: Math.random() * 4 + 2, color: col, life: 1.0, decay: 0.04
+        });
+    }
+}
+function updateAndDrawParticles() {
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i]; p.x += p.vx; p.y += p.vy; p.life -= p.decay;
+        if (p.life <= 0) { particles.splice(i, 1); continue; }
+        ctx.save(); ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    }
+}
+
+/* ================= SHOWDOWN SCALE: FINAL REVEAL ================= */
+function endGameByTime() {
+    showScreen('screen-scale'); sfxFanfare();
+    const scv = document.getElementById('scaleCanvas'), sctx = scv.getContext('2d');
+    scv.width = 440 * dpr; scv.height = 240 * dpr;
+    scv.style.width = '440px'; scv.style.height = '240px';
+    sctx.setTransform(1, 0, 0, 1, 0, 0); sctx.scale(dpr, dpr);
+
+    const m1 = calcCash(p1Score.goldKg, p1Score.silverKg, p1Score.diamondKg);
+    const m2 = calcCash(p2Score.goldKg, p2Score.silverKg, p2Score.diamondKg);
+
+    let targetAngle = 0;
+    if (gameMode === 'solo') targetAngle = -0.15;
+    else { if (m1 > m2) targetAngle = -0.18; else if (m2 > m1) targetAngle = 0.18; }
+
+    let currAngle = 0, animTicks = 0;
+    function renderScale() {
+        sctx.clearRect(0, 0, 440, 240);
+        currAngle += (targetAngle - currAngle) * 0.05;
+
+        sctx.fillStyle = '#7f8c8d'; sctx.beginPath(); sctx.moveTo(220, 120); sctx.lineTo(190, 210); sctx.lineTo(250, 210); sctx.fill();
+        sctx.save(); sctx.translate(220, 120); sctx.rotate(currAngle);
+        sctx.fillStyle = '#d35400'; sctx.fillRect(-140, -5, 280, 10);
+
+        const p1NameTag = (gameMode === 'online' && myOnlinePlayerNum === 2) ? opponentName : myPlayerName;
+        const p2NameTag = (gameMode === 'online' && myOnlinePlayerNum === 2) ? myPlayerName : (gameMode === 'solo' ? 'Target $1.000' : opponentName);
+
+        drawScalePlate(sctx, -120, 0, `${p1Score.goldKg}G|${p1Score.silverKg}S|${p1Score.diamondKg}D`, formatMoney(m1), '#ff4757', p1NameTag);
+        drawScalePlate(sctx, 120, 0, (gameMode === 'solo' ? '-' : `${p2Score.goldKg}G|${p2Score.silverKg}S|${p2Score.diamondKg}D`), (gameMode === 'solo' ? 'Goal: $1,000' : formatMoney(m2)), '#2ed573', p2NameTag);
+        sctx.restore();
+
+        if (animTicks < 75) { animTicks++; requestAnimationFrame(renderScale); }
+        else {
+            const banner = document.getElementById('winner-banner');
+            let winnerTitle = '';
+            if (m1 > m2) {
+                winnerTitle = (gameMode === 'online') ? (myOnlinePlayerNum === 1 ? myPlayerName : opponentName) : myPlayerName;
+                banner.innerHTML = `🏆 <span style="color:var(--p1-col)">${winnerTitle} Wins!</span> Brought home ${formatMoney(m1)}!`;
+            } else if (m2 > m1) {
+                winnerTitle = (gameMode === 'online') ? (myOnlinePlayerNum === 2 ? myPlayerName : opponentName) : opponentName;
+                banner.innerHTML = `🏆 <span style="color:var(--p2-col)">${winnerTitle} Wins!</span> Brought home ${formatMoney(m2)}!`;
+            } else {
+                banner.innerHTML = `🤝 It's a Tie! Both players brought home ${formatMoney(m1)}!`;
+            }
+        }
+    }
+    renderScale();
+}
+
+function drawScalePlate(ctx, x, y, oreWeight, money, col, nameLabel) {
+    ctx.save(); ctx.translate(x, y);
+    ctx.strokeStyle = '#bdc3c7'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, 5); ctx.lineTo(-24, 45); ctx.moveTo(0, 5); ctx.lineTo(24, 45); ctx.stroke();
+    ctx.fillStyle = col; ctx.beginPath(); ctx.arc(0, 45, 28, 0, Math.PI); ctx.fill();
+    ctx.fillStyle = '#2c3e50'; ctx.font = 'bold 10px Fredoka One'; ctx.textAlign = 'center';
+    ctx.fillText(nameLabel || '', 0, 38); ctx.fillText(oreWeight, 0, 58); ctx.fillText(money, 0, 72);
+    ctx.restore();
+}
+
+/* ================= MAIN MENU DIORAMA ================= */
+const menuCv = document.getElementById('menuArtCanvas'), mCtx = menuCv.getContext('2d');
+let menuAnimTick = 0, menuAnimFrameId = null;
+
+let menuStars = [];
+for (let i = 0; i < 26; i++) {
+    menuStars.push({ x: Math.random() * 580, y: Math.random() * 95, r: 0.8 + Math.random() * 1.6, phase: Math.random() * Math.PI * 2, speed: 1.5 + Math.random() * 2.5 });
+}
+let menuCartDust = [], menuFireflies = [];
+for (let i = 0; i < 20; i++) {
+    menuFireflies.push({
+        x: Math.random() * 580, y: 40 + Math.random() * 145, speedX: (Math.random() - 0.5) * 0.45, speedY: (Math.random() - 0.5) * 0.35,
+        radius: 1.2 + Math.random() * 1.6, phase: Math.random() * Math.PI * 2, color: (Math.random() > 0.6 ? '#f1c40f' : (Math.random() > 0.3 ? '#2ecc71' : '#00cec9'))
+    });
+}
+let menuLeaves = [];
+for (let i = 0; i < 8; i++) {
+    menuLeaves.push({ x: 50 + Math.random() * 110, y: 60 + Math.random() * 90, vy: 0.35 + Math.random() * 0.45, vx: 0.2 + Math.random() * 0.35, rot: Math.random() * Math.PI, vRot: (Math.random() - 0.5) * 0.06 });
+}
+let shootingStar = { x: -50, y: 0, vx: 0, vy: 0, active: false, timer: 45 };
+
+function initMenuArt() {
+    const mdpr = Math.min(window.devicePixelRatio || 1, 2);
+    menuCv.width = 580 * mdpr; menuCv.height = 215 * mdpr;
+    menuCv.style.width = '100%'; menuCv.style.height = '215px';
+    mCtx.scale(mdpr, mdpr);
+}
+
+function startMenuArt() {
+    if (menuAnimFrameId) cancelAnimationFrame(menuAnimFrameId);
+    function loop() {
+        if (!document.getElementById('screen-home').classList.contains('active')) return;
+        renderMenuArtLoop(); menuAnimFrameId = requestAnimationFrame(loop);
+    }
+    menuAnimFrameId = requestAnimationFrame(loop);
+}
+
+function renderMenuArtLoop() {
+    menuAnimTick += 0.038;
+    mCtx.clearRect(0, 0, 580, 215);
+
+    const skyG = mCtx.createLinearGradient(0, 0, 0, 140);
+    skyG.addColorStop(0, '#0a1435'); skyG.addColorStop(0.35, '#1e2c65');
+    skyG.addColorStop(0.75, '#c0392b'); skyG.addColorStop(1, '#f39c12');
+    mCtx.fillStyle = skyG; mCtx.fillRect(0, 0, 580, 140);
+
+    menuStars.forEach(st => {
+        const alpha = 0.3 + Math.sin(menuAnimTick * st.speed + st.phase) * 0.5;
+        if (alpha > 0) {
+            mCtx.save(); mCtx.globalAlpha = Math.min(1, Math.max(0, alpha));
+            mCtx.fillStyle = '#ffffff'; mCtx.beginPath(); mCtx.arc(st.x, st.y, st.r, 0, Math.PI * 2); mCtx.fill(); mCtx.restore();
+        }
+    });
+
+    shootingStar.timer--;
+    if (shootingStar.timer <= 0 && !shootingStar.active) {
+        shootingStar.x = 80 + Math.random() * 280; shootingStar.y = 10 + Math.random() * 40;
+        shootingStar.vx = 4.2 + Math.random() * 2.5; shootingStar.vy = 2.2 + Math.random() * 1.5;
+        shootingStar.active = true; shootingStar.timer = 180 + Math.floor(Math.random() * 140);
+    }
+    if (shootingStar.active) {
+        mCtx.save(); mCtx.strokeStyle = 'rgba(255, 255, 255, 0.75)'; mCtx.lineWidth = 1.8;
+        mCtx.beginPath(); mCtx.moveTo(shootingStar.x, shootingStar.y);
+        mCtx.lineTo(shootingStar.x - shootingStar.vx * 3.5, shootingStar.y - shootingStar.vy * 3.5); mCtx.stroke(); mCtx.restore();
+        shootingStar.x += shootingStar.vx; shootingStar.y += shootingStar.vy;
+        if (shootingStar.y > 115 || shootingStar.x > 560) shootingStar.active = false;
+    }
+
+    mCtx.fillStyle = 'rgba(255, 255, 255, 0.72)';
+    [{ x: (menuAnimTick * 8) % 680 - 60, y: 22, s: 20 }, { x: (menuAnimTick * 5 + 260) % 680 - 60, y: 38, s: 15 }, { x: (menuAnimTick * 3.5 + 480) % 680 - 60, y: 16, s: 13 }].forEach(c => {
+        mCtx.beginPath(); mCtx.arc(c.x, c.y, c.s, 0, Math.PI * 2);
+        mCtx.arc(c.x + c.s * 0.7, c.y - c.s * 0.25, c.s * 0.75, 0, Math.PI * 2);
+        mCtx.arc(c.x + c.s * 1.3, c.y, c.s * 0.6, 0, Math.PI * 2); mCtx.fill();
+    });
+
+    mCtx.fillStyle = '#2d6a4f'; mCtx.beginPath(); mCtx.moveTo(0, 140); mCtx.lineTo(60, 95); mCtx.lineTo(160, 140);
+    mCtx.lineTo(270, 90); mCtx.lineTo(390, 140); mCtx.fill();
+    mCtx.fillStyle = '#4a2c1d'; mCtx.beginPath(); mCtx.moveTo(350, 150); mCtx.lineTo(370, 75); mCtx.lineTo(435, 28);
+    mCtx.lineTo(580, 22); mCtx.lineTo(580, 215); mCtx.lineTo(350, 215); mCtx.closePath(); mCtx.fill();
+
+    const torchNoise = Math.sin(menuAnimTick * 4) * 0.12 + Math.cos(menuAnimTick * 7) * 0.08;
+    const caveGrad = mCtx.createRadialGradient(475, 125, 6, 475, 125, 64 + torchNoise * 15);
+    caveGrad.addColorStop(0, '#0a0502'); caveGrad.addColorStop(0.65, '#1e0c04'); caveGrad.addColorStop(1, '#3b1d0c');
+    mCtx.fillStyle = caveGrad; mCtx.beginPath(); mCtx.arc(475, 125, 48, Math.PI, 0, false);
+    mCtx.lineTo(523, 162); mCtx.lineTo(427, 162); mCtx.closePath(); mCtx.fill();
+
+    mCtx.fillStyle = '#5a3522';
+    [{ x: 442, w: 10, h: 18 }, { x: 465, w: 12, h: 26 }, { x: 495, w: 9, h: 20 }, { x: 512, w: 8, h: 14 }].forEach(st => {
+        mCtx.beginPath(); mCtx.moveTo(st.x, 90); mCtx.lineTo(st.x + st.w / 2, 90 + st.h); mCtx.lineTo(st.x + st.w, 90); mCtx.fill();
+    });
+
+    mCtx.fillStyle = '#6d4c41'; mCtx.fillRect(420, 75, 15, 85); mCtx.fillRect(518, 75, 15, 85); mCtx.fillRect(412, 68, 128, 16);
+    mCtx.fillStyle = '#8d6e63'; mCtx.beginPath(); mCtx.roundRect(440, 52, 70, 18, 4); mCtx.fill();
+    mCtx.fillStyle = '#f5f6fa'; mCtx.font = 'bold 9px Fredoka One'; mCtx.textAlign = 'center'; mCtx.fillText("MINE #01 ⛏️", 475, 65);
+
+    const lanternAngle = Math.sin(menuAnimTick * 2.2) * 0.18;
+    mCtx.save();
+    mCtx.translate(436, 84); mCtx.rotate(lanternAngle);
+    mCtx.strokeStyle = '#2c3e50'; mCtx.lineWidth = 1.5; mCtx.beginPath(); mCtx.moveTo(0, 0); mCtx.lineTo(0, 8); mCtx.stroke();
+    const lGlow = mCtx.createRadialGradient(0, 14, 2, 0, 14, 30 + Math.sin(menuAnimTick * 4) * 3);
+    lGlow.addColorStop(0, 'rgba(241, 196, 15, 0.75)'); lGlow.addColorStop(1, 'rgba(241, 196, 15, 0)');
+    mCtx.fillStyle = lGlow; mCtx.beginPath(); mCtx.arc(0, 14, 32, 0, Math.PI*2); mCtx.fill();
+    mCtx.fillStyle = '#d35400'; mCtx.fillRect(-4, 8, 8, 11);
+    mCtx.fillStyle = '#f1c40f'; mCtx.fillRect(-2, 11, 4, 6);
+    mCtx.restore();
+
+    mCtx.save();
+    mCtx.translate(75, 145); mCtx.rotate(Math.sin(menuAnimTick * 1.5) * 0.04);
+    mCtx.fillStyle = '#5d4037'; mCtx.fillRect(-8, -48, 16, 50);
+    mCtx.fillStyle = '#1b5e20'; mCtx.beginPath(); mCtx.arc(0, -56, 26, 0, Math.PI*2); mCtx.fill();
+    mCtx.fillStyle = '#2e7d32'; mCtx.beginPath(); mCtx.arc(-8, -62, 22, 0, Math.PI*2); mCtx.fill();
+    mCtx.restore();
+
+    menuLeaves.forEach(lf => {
+        lf.y += lf.vy; lf.x += lf.vx + Math.sin(menuAnimTick + lf.y * 0.05) * 0.45; lf.rot += lf.vRot;
+        if (lf.y > 152) { lf.y = 75; lf.x = 55 + Math.random() * 85; }
+        mCtx.save(); mCtx.translate(lf.x, lf.y); mCtx.rotate(lf.rot);
+        mCtx.fillStyle = '#4caf50'; mCtx.beginPath(); mCtx.ellipse(0, 0, 4, 2, 0, 0, Math.PI*2); mCtx.fill();
+        mCtx.restore();
+    });
+
+    const gGrad = mCtx.createLinearGradient(0, 142, 0, 215);
+    gGrad.addColorStop(0, '#2ecc71'); gGrad.addColorStop(0.25, '#27ae60'); gGrad.addColorStop(1, '#5a3620');
+    mCtx.fillStyle = gGrad; mCtx.fillRect(0, 142, 580, 73);
+    for (let rx = 20; rx < 540; rx += 25) { mCtx.fillStyle = '#4e342e'; mCtx.fillRect(rx, 148, 16, 9); }
+    mCtx.fillStyle = '#7f8c8d'; mCtx.fillRect(0, 145, 540, 5);
+
+    mCtx.save();
+    mCtx.translate(195, 148); mCtx.fillStyle = '#7f8c8d';
+    mCtx.beginPath(); mCtx.moveTo(-16, 0); mCtx.lineTo(-10, -16); mCtx.lineTo(12, -18); mCtx.lineTo(20, -4); mCtx.closePath(); mCtx.fill();
+    mCtx.save();
+    mCtx.translate(0, -10); mCtx.rotate(-0.55);
+    mCtx.fillStyle = '#d35400'; mCtx.fillRect(-2.5, -28, 5, 34);
+    mCtx.strokeStyle = '#bdc3c7'; mCtx.lineWidth = 4;
+    mCtx.beginPath(); mCtx.arc(0, -26, 16, Math.PI * 0.8, Math.PI * 1.55); mCtx.stroke();
+    mCtx.restore(); mCtx.restore();
+
+    const cartX = 320 + Math.sin(menuAnimTick * 0.8) * 18, cartY = 112;
+    const idleBob = Math.sin(menuAnimTick * 2.5) * 2, cartTilt = Math.cos(menuAnimTick * 0.8) * 0.035;
+
+    if (Math.random() < 0.25) {
+        menuCartDust.push({ x: cartX - 16 + (Math.random() - 0.5) * 8, y: cartY + 36, vx: (Math.random() - 0.5) * 0.8, vy: -0.4 - Math.random() * 0.5, size: 2.2 + Math.random() * 2.5, alpha: 0.65 });
+    }
+    for (let d = menuCartDust.length - 1; d >= 0; d--) {
+        const dp = menuCartDust[d]; dp.x += dp.vx; dp.y += dp.vy; dp.size += 0.08; dp.alpha -= 0.025;
+        if (dp.alpha <= 0) { menuCartDust.splice(d, 1); continue; }
+        mCtx.save(); mCtx.fillStyle = `rgba(189, 195, 199, ${dp.alpha})`; mCtx.beginPath(); mCtx.arc(dp.x, dp.y, dp.size, 0, Math.PI * 2); mCtx.fill(); mCtx.restore();
+    }
+
+    mCtx.save();
+    mCtx.translate(cartX, cartY); mCtx.rotate(cartTilt);
+    mCtx.fillStyle = '#8d6e63'; mCtx.beginPath(); mCtx.roundRect(-32, 10, 66, 26, 6); mCtx.fill();
+    mCtx.fillStyle = '#ff4757'; mCtx.fillRect(-32, 10, 8, 26); mCtx.fillRect(26, 10, 8, 26);
+
+    const goldBounce = Math.sin(menuAnimTick * 3.5) * 1.2;
+    mCtx.fillStyle = '#f1c40f'; mCtx.beginPath(); mCtx.arc(-14, 8 + goldBounce, 9, 0, Math.PI * 2); mCtx.arc(4, 7 + goldBounce, 8, 0, Math.PI * 2); mCtx.fill();
+    mCtx.fillStyle = '#dcdde1'; mCtx.beginPath(); mCtx.arc(-4, 5 + goldBounce, 7, 0, Math.PI * 2); mCtx.arc(-22, 11 + goldBounce, 7, 0, Math.PI * 2); mCtx.fill();
+
+    const wheelRot = cartX * 0.15;
+    [-18, 18].forEach(wx => {
+        mCtx.save(); mCtx.translate(wx, 36); mCtx.rotate(wheelRot);
+        mCtx.fillStyle = '#263238'; mCtx.beginPath(); mCtx.arc(0, 0, 8.5, 0, Math.PI * 2); mCtx.fill();
+        mCtx.strokeStyle = '#95a5a6'; mCtx.lineWidth = 2;
+        mCtx.beginPath(); mCtx.moveTo(-8, 0); mCtx.lineTo(8, 0); mCtx.moveTo(0, -8); mCtx.lineTo(0, 8); mCtx.stroke();
+        mCtx.restore();
+    });
+
+    const isMenuBlinking = (Math.sin(menuAnimTick * 0.6) > 0.95);
+    mCtx.save();
+    mCtx.translate(-2, 4 + idleBob); drawBlook(mCtx, myAvatarBlook, 0, 0, 26, isMenuBlinking, idleBob * 0.3);
+    mCtx.translate(14, 2); mCtx.rotate(Math.sin(menuAnimTick * 5) * 0.25);
+    mCtx.fillStyle = '#ffffff'; mCtx.beginPath(); mCtx.arc(0, 0, 4, 0, Math.PI * 2); mCtx.fill();
+    mCtx.restore();
+    mCtx.restore();
+
+    menuFireflies.forEach(ff => {
+        ff.x += ff.speedX; ff.y += ff.speedY;
+        if (ff.x < 10) ff.x = 570; if (ff.x > 570) ff.x = 10;
+        if (ff.y < 35) ff.y = 180; if (ff.y > 185) ff.y = 40;
+        const pulse = 0.35 + Math.sin(menuAnimTick * 3 + ff.phase) * 0.45;
+        mCtx.save(); mCtx.globalAlpha = Math.max(0, pulse); mCtx.fillStyle = ff.color;
+        mCtx.beginPath(); mCtx.arc(ff.x, ff.y, ff.radius, 0, Math.PI * 2); mCtx.fill();
+        mCtx.restore();
+    });
+}
+
+window.addEventListener('load', () => {
+    const savedName = localStorage.getItem('miner_name');
+    const savedBlook = localStorage.getItem('miner_avatar_blook');
+    if (savedName) { myPlayerName = savedName; document.getElementById('player-name-input').value = savedName; }
+    if (savedBlook) { myAvatarBlook = savedBlook; }
+    initLandingShowcase();
+    updateCurrentMenuBlookPreview();
+    initMenuArt();
+    startMenuArt();
+});
+</script>
+</body>
+</html>
