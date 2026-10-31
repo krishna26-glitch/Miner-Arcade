@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MINER ARCADE - ONLINE & CARTOON CLAW</title>
+<title>MINER ARCADE - MINESHAFT EXPEDITION</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
@@ -70,6 +70,7 @@
     .input-player-name:focus { border-color: #ff4757; }
 
     .menu-art-wrapper {
+        position: relative;
         width: 100%; max-width: 580px; border-radius: 22px; overflow: hidden; border: 5px solid #b3541e;
         box-shadow: 0 8px 0 #803810, 0 14px 28px rgba(0,0,0,0.25); margin: 0 auto 14px auto; background: #0a1435;
     }
@@ -83,6 +84,7 @@
         letter-spacing: 0.5px;
     }
     .btn-arcade:active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(0,0,0,0.25); }
+    .btn-arcade:disabled { opacity: 0.6; pointer-events: none; }
     .btn-start-hero { background: #ff4757; box-shadow: 0 6px 0 #b71540; font-size: 1.4rem; padding: 15px 25px; }
     .btn-online { background: #0984e3; box-shadow: 0 6px 0 #074b83; }
     .btn-duo { background: #9b59b6; box-shadow: 0 6px 0 #8e44ad; }
@@ -112,7 +114,7 @@
 
     .mine-viewport {
         position: relative; width: 100%; border-radius: 26px; border: 7px solid var(--wood-frame);
-        box-shadow: 0 10px 0 var(--wood-shadow), 0 16px 28px rgba(0,0,0,0.25); overflow: hidden; background: #3d2314;
+        box-shadow: 0 10px 0 var(--wood-shadow), 0 16px 28px rgba(0,0,0,0.25); overflow: hidden; background: #26160c;
     }
     #mineCanvas { display: block; width: 100%; height: 460px; }
 
@@ -193,6 +195,7 @@
 </head>
 <body onclick="handleUserAudioInteraction()">
 
+    <!-- LANDING SCREEN -->
     <div class="screen active" id="screen-landing">
         <div class="hero-card" style="max-width:540px;">
             <div style="font-size:3.5rem; margin-bottom:-8px;">⛏️💎⛏️</div>
@@ -217,6 +220,7 @@
         </div>
     </div>
 
+    <!-- HOME SCREEN -->
     <div class="screen" id="screen-home">
         <div class="hero-card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -229,14 +233,15 @@
                 <button class="btn-hud-action" style="padding:5px 12px;" onclick="backToLanding()">Edit Profile</button>
             </div>
 
+            <!-- ANIMATED MENU SCREEN WITH TRANSITION CAVE -->
             <div class="menu-art-wrapper">
                 <canvas id="menuArtCanvas"></canvas>
             </div>
 
             <div class="menu-group">
-                <button class="btn-arcade btn-online" onclick="openOnlineModal()">MULTIPLAYER</button>
-                <button class="btn-arcade btn-duo" onclick="startMode('duo')">2 PLAYERS</button>
-                <button class="btn-arcade btn-solo" onclick="startMode('solo')">SINGLEPLAYER</button>
+                <button class="btn-arcade btn-online" id="btn-menu-online" onclick="openOnlineModal()">MULTIPLAYER</button>
+                <button class="btn-arcade btn-duo" id="btn-menu-duo" onclick="triggerCartTransition('duo')">2 PLAYERS</button>
+                <button class="btn-arcade btn-solo" id="btn-menu-solo" onclick="triggerCartTransition('solo')">SINGLEPLAYER</button>
                 <button class="btn-arcade btn-blook-picker" onclick="openBlookLockerModal()">BLOOK LOCKER</button>
                 <div style="display:flex; gap:8px;">
                     <button class="btn-arcade btn-opt" style="flex:1;" onclick="openOptionsModal()">SETTINGS</button>
@@ -246,6 +251,7 @@
         </div>
     </div>
 
+    <!-- BLOOK LOCKER MODAL -->
     <div class="modal-overlay" id="blook-picker-modal">
         <div class="modal-box">
             <h2 style="font-family:'Fredoka One'; color:#f39c12; margin-bottom:4px;">CHOOSE YOUR BLOOK</h2>
@@ -257,6 +263,7 @@
         </div>
     </div>
 
+    <!-- GAME ARCADE SCREEN -->
     <div class="screen" id="screen-game">
         <div class="game-hud">
             <button class="btn-hud-action btn-hud-leave" onclick="confirmLeaveGame()" title="Leave Game">MENU</button>
@@ -327,18 +334,22 @@
         </div>
     </div>
 
+    <!-- SHOWDOWN FINAL WEIGH-IN SCREEN -->
     <div class="screen" id="screen-scale">
         <div class="hero-card">
-            <h2 style="font-family:'Fredoka One'; color:var(--gold-col); font-size:1.8rem;">⚖️ FINAL WEIGH-IN ⚖️</h2>
-            <p style="font-weight:800; color:var(--text-muted); font-size:0.9rem; margin-bottom:10px;">
-                Exchange Rate: Diamond = $300/kg | Gold = $80/kg | Silver = $20/kg
+            <h2 style="font-family:'Fredoka One'; color:var(--gold-col); font-size:2rem; letter-spacing:1px;">⚖️ FINAL WEIGH-IN ⚖️</h2>
+            <p style="font-weight:800; color:var(--text-muted); font-size:0.92rem; margin-bottom:8px;">
+                Exchange: Diamond = $300/kg • Gold = $80/kg • Silver = $20/kg
             </p>
-            <div style="max-width:440px; margin:0 auto;"><canvas id="scaleCanvas"></canvas></div>
-            <div id="winner-banner" style="font-family:'Fredoka One'; font-size:1.5rem; margin:14px 0;"></div>
-            <button class="btn-arcade btn-solo" style="margin:0 auto; padding:10px 36px;" onclick="returnToLobby()">MAIN MENU</button>
+            <div style="max-width:500px; margin:0 auto; position:relative;">
+                <canvas id="scaleCanvas"></canvas>
+            </div>
+            <div id="winner-banner" style="font-family:'Fredoka One'; font-size:1.55rem; margin:12px 0; min-height:42px;"></div>
+            <button class="btn-arcade btn-solo" style="margin:0 auto; padding:12px 42px;" onclick="returnToLobby()">MAIN MENU</button>
         </div>
     </div>
 
+    <!-- CONFIRM LEAVE MODAL -->
     <div class="modal-overlay" id="confirm-leave-modal">
         <div class="modal-box" style="max-width:360px;">
             <div style="font-size:2.6rem; margin-bottom:4px;">🚪</div>
@@ -351,6 +362,7 @@
         </div>
     </div>
 
+    <!-- ONLINE MULTIPLAYER MODAL -->
     <div class="modal-overlay" id="online-modal">
         <div class="modal-box">
             <h2 style="font-family:'Fredoka One'; color:#0984e3; margin-bottom:8px;">ONLINE MULTIPLAYER</h2>
@@ -368,12 +380,13 @@
                 <p style="font-weight:800;">Share this Code with your friend:</p>
                 <div class="room-badge" id="display-room-code">----</div>
                 <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">Waiting for opponent to connect...</p>
-                <button class="btn-arcade" style="background:#e67e22; width:100%; margin-bottom:8px;" onclick="cancelOnlineWaiting()">Cancel / Join with Code</button>
+                <button class="btn-arcade" style="background:#e67e22; width:100%; margin-bottom:8px;" onclick="cancelOnlineWaiting()">Cancel / Back</button>
             </div>
             <button class="btn-arcade" style="background:#95a5a6; width:100%; margin-top:12px;" onclick="closeOnlineModal()">Close</button>
         </div>
     </div>
 
+    <!-- SETTINGS MODAL -->
     <div class="modal-overlay" id="options-modal">
         <div class="modal-box">
             <h2 style="font-family:'Fredoka One'; margin-bottom:14px;">SETTINGS</h2>
@@ -399,6 +412,7 @@
         </div>
     </div>
 
+    <!-- HOW TO PLAY MODAL -->
     <div class="modal-overlay" id="perk-info-modal">
         <div class="modal-box" style="text-align:left; max-height:85vh; overflow-y:auto;">
             <h2 style="font-family:'Fredoka One'; text-align:center; margin-bottom:10px;">HOW TO PLAY</h2>
@@ -406,7 +420,7 @@
             <p style="font-size:0.88rem; line-height:1.45; margin-bottom:6px;">🥇 <b>Gold ($80/kg):</b> Crystalline golden nugget clusters with bright metallic facets.</p>
             <p style="font-size:0.88rem; line-height:1.45; margin-bottom:6px;">🥈 <b>Silver ($20/kg):</b> Raw crystalline silver clusters with sharp chrome prisms.</p>
             <p style="font-size:0.88rem; line-height:1.45; margin-bottom:6px;">🦀 <b>Underground Encounter:</b> When claw grasps an ore underground, answer the quiz to haul it up!</p>
-            <p style="font-size:0.88rem; line-height:1.45; margin-bottom:6px;">💰 <b>Cash Weigh-In:</b> All collected mineral values are revealed at the Final Weigh-In scale!</p>
+            <p style="font-size:0.88rem; line-height:1.45; margin-bottom:6px;">💰 <b>Cash Weigh-In:</b> All collected mineral values are weighed on the animated showdown scale!</p>
             <button class="btn-arcade btn-opt" style="width:100%; margin-top:12px;" onclick="closePerkGuideModal()">Got It!</button>
         </div>
     </div>
@@ -640,8 +654,12 @@ function sfxHook() { beep(580, 'sine', 0.12, 0.4); }
 function sfxCorrect() { beep(523, 'triangle', 0.1, 0.3); setTimeout(() => beep(659, 'triangle', 0.2, 0.3), 100); }
 function sfxZonk() { beep(160, 'sawtooth', 0.25, 0.4); setTimeout(() => beep(110, 'sawtooth', 0.35, 0.4), 160); }
 function sfxDrop() { beep(280, 'sine', 0.15, 0.3); setTimeout(() => beep(180, 'triangle', 0.2, 0.35), 90); }
-function sfxFanfare() { [392, 523, 659, 784].forEach((f, i) => setTimeout(() => beep(f, 'square', 0.2, 0.2), i * 140)); }
+function sfxFanfare() { [392, 523, 659, 784, 1046].forEach((f, i) => setTimeout(() => beep(f, 'square', 0.22, 0.25), i * 130)); }
 function sfxSparkle() { [659, 784, 987, 1318].forEach((f, i) => setTimeout(() => beep(f, 'triangle', 0.12, 0.15), i * 80)); }
+function sfxCartZoom() {
+    [180, 220, 280, 360, 480].forEach((f, i) => setTimeout(() => beep(f, 'triangle', 0.14, 0.2), i * 70));
+}
+function sfxScalePlop() { beep(320, 'sine', 0.1, 0.35); setTimeout(() => beep(440, 'triangle', 0.1, 0.3), 60); }
 
 function applyAudioSetting() {
     ensureAudioReady();
@@ -690,7 +708,7 @@ function returnToLobby() {
     if (gameTimerInterval) clearInterval(gameTimerInterval);
     if (syncBroadcastInterval) clearInterval(syncBroadcastInterval);
     if (animFrameId) cancelAnimationFrame(animFrameId);
-    isOnlineConnected = false;
+    isOnlineConnected = false; isTransitioningIntoMine = false;
     document.getElementById('quiz-card-p1').style.display = 'none';
     document.getElementById('quiz-card-p2').style.display = 'none';
     showScreen('screen-home'); startMenuArt(); toast("Returned to Main Menu");
@@ -753,7 +771,7 @@ function showScreen(id) {
     if (id === 'screen-home') {
         updateCurrentMenuBlookPreview();
         startMenuArt();
-    } else isMenuArtRunning = false;
+    }
 }
 
 /* ================= ENGLISH ICT QUIZ BANK ================= */
@@ -820,7 +838,7 @@ function calcCash(goldKg, silverKg, diamondKg) {
 }
 function formatMoney(amount) { return '$' + amount.toLocaleString('en-US'); }
 
-/* ================= GAME STATE & SURFACE CONFIG ================= */
+/* ================= GAME STATE & CONFIG ================= */
 const cv = document.getElementById('mineCanvas'), ctx = cv.getContext('2d');
 let dpr = 1, LOGICAL_WIDTH = 700, LOGICAL_HEIGHT = 460;
 const GOLD_RESPAWN_INTERVAL = 75;
@@ -863,6 +881,11 @@ let activeBuffs = { p1: { turboWinch: 0, mudSlow: 0, midasTouch: false }, p2: { 
 let mineObjects = [], nextItemId = 1, particles = [], screenShake = 0, animTick = 0;
 let soilPebbles = [], subterraneanRoots = [], ambientMotes = [];
 
+/* TOP CAVE TUNNEL PARTICLES (PERCIKAN API, TETESAN AIR GOA & DEBU) */
+let caveTorchEmbers = [];
+let caveWaterDrips = [];
+let caveDustMotes = [];
+
 function initSoilDetails() {
     soilPebbles = [];
     for (let i = 0; i < 46; i++) {
@@ -887,8 +910,37 @@ function initSoilDetails() {
             r: 0.8 + Math.random() * 1.5, vy: -0.15 - Math.random() * 0.2, vx: (Math.random() - 0.5) * 0.2, phase: Math.random() * Math.PI * 2
         });
     }
+
+    // Top Cave Ambient Dust
+    caveDustMotes = [];
+    for (let i = 0; i < 15; i++) {
+        caveDustMotes.push({
+            x: Math.random() * LOGICAL_WIDTH, y: 10 + Math.random() * 65,
+            r: 0.7 + Math.random() * 1.3, vx: (Math.random() - 0.5) * 0.3, vy: -0.05 - Math.random() * 0.1, phase: Math.random() * Math.PI * 2
+        });
+    }
 }
 initSoilDetails();
+
+/* ================= CART TRANSITION INTO CAVE ================= */
+let isTransitioningIntoMine = false;
+let transitionProgress = 0;
+let transitionModeTarget = 'solo';
+let transitionDust = [];
+
+function triggerCartTransition(mode, isHostGuest = false) {
+    if (isTransitioningIntoMine) return;
+    ensureAudioReady();
+    isTransitioningIntoMine = true;
+    transitionProgress = 0;
+    transitionModeTarget = mode;
+    transitionDust = [];
+    sfxCartZoom();
+
+    const bSolo = document.getElementById('btn-menu-solo'); if (bSolo) bSolo.disabled = true;
+    const bDuo = document.getElementById('btn-menu-duo'); if (bDuo) bDuo.disabled = true;
+    const bOnl = document.getElementById('btn-menu-online'); if (bOnl) bOnl.disabled = true;
+}
 
 /* ================= PEERJS MULTIPLAYER ================= */
 let peer = null, peerConn = null, isOnlineHost = false, myOnlinePlayerNum = 1, isOnlineConnected = false;
@@ -942,10 +994,10 @@ function setupOnlineConnection() {
         isOnlineConnected = true; closeOnlineModal(); toast("🎉 Connected with Opponent!");
         peerConn.send({ type: 'HANDSHAKE', name: myPlayerName, avatarBlook: myAvatarBlook });
         if (isOnlineHost) {
-            startMode('online');
+            triggerCartTransition('online');
             setTimeout(() => {
                 peerConn.send({ type: 'INIT_GAME', mineObjects: mineObjects, timeLeft: timeLeft, respawnTimer: goldRespawnTimer });
-            }, 500);
+            }, 900);
         }
         if (syncBroadcastInterval) clearInterval(syncBroadcastInterval);
         syncBroadcastInterval = setInterval(() => {
@@ -976,7 +1028,8 @@ function handleOnlineDataMessage(data) {
         opponentName = data.name || 'Friend'; opponentAvatarBlook = data.avatarBlook || 'astronaut';
         updateHUDNames();
     } else if (data.type === 'INIT_GAME') {
-        gameMode = 'online'; startMode('online', true);
+        gameMode = 'online';
+        triggerCartTransition('online', true);
         mineObjects = data.mineObjects; timeLeft = data.timeLeft;
         goldRespawnTimer = data.respawnTimer || GOLD_RESPAWN_INTERVAL; updateGoldRespawnDisplay();
     } else if (data.type === 'SYNC_CLAW_STATE') {
@@ -1136,7 +1189,7 @@ window.addEventListener('keydown', (e) => {
     }
 });
 
-/* ================= STRICT ANTI-OVERLAP POSITIONING ================= */
+/* ================= ORE PLACEMENT ================= */
 function findNaturalPosition(minY, maxY, radius, existingItems) {
     const padX = 75;
     let bestX = padX + radius, bestY = minY + radius, placed = false;
@@ -1158,7 +1211,6 @@ function findNaturalPosition(minY, maxY, radius, existingItems) {
     return { x: bestX, y: bestY };
 }
 
-/* MINERAL CREATION: CRYSTALLINE NUGGETS & PRISMS */
 function createMineralObject(id, type, kg, r, x, y) {
     const offsets = [];
     for (let p = 0; p < 10; p++) offsets.push(0.76 + Math.random() * 0.38);
@@ -1182,13 +1234,10 @@ function createMineralObject(id, type, kg, r, x, y) {
     };
 }
 
-/* FULL REFRESH / FLUSH SPAWN: COAL > SILVER > GOLD > DIAMOND */
 function flushAndSpawnMineOres() {
-    // Preserve any ore currently held by a claw so we don't break active hauls!
     const heldOres = mineObjects.filter(m => m.grabbedBy !== null);
     mineObjects = [...heldOres];
 
-    // 1. Coal (8 items - Most common)
     [{ count: 3, minY: 155, maxY: 235 }, { count: 3, minY: 245, maxY: 330 }, { count: 2, minY: 340, maxY: 425 }].forEach(group => {
         for (let i = 0; i < group.count; i++) {
             const rad = 20 + Math.random() * 6, pos = findNaturalPosition(group.minY, group.maxY, rad, mineObjects);
@@ -1196,27 +1245,23 @@ function flushAndSpawnMineOres() {
         }
     });
 
-    // 2. Perks (2 items)
     for (let p = 0; p < 2; p++) {
         const pos = findNaturalPosition(180, 330, 20, mineObjects);
         mineObjects.push(createMineralObject(nextItemId++, 'perk', 0, 20, pos.x, pos.y));
     }
 
-    // 3. Silver (5 items)
     [{ kg: 2, r: 17, minY: 160, maxY: 235 }, { kg: 2, r: 18, minY: 170, maxY: 245 }, { kg: 3, r: 19, minY: 240, maxY: 325 }, { kg: 4, r: 21, minY: 250, maxY: 335 }, { kg: 4, r: 22, minY: 330, maxY: 415 }].forEach(s => {
         const pos = findNaturalPosition(s.minY, s.maxY, s.r, mineObjects);
         mineObjects.push(createMineralObject(nextItemId++, 'silver', s.kg, s.r, pos.x, pos.y));
         addParticles(pos.x, pos.y, 'silver');
     });
 
-    // 4. Gold (3 items)
     [{ kg: 4, r: 25, minY: 175, maxY: 250 }, { kg: 6, r: 29, minY: 255, maxY: 340 }, { kg: 10, r: 34, minY: 340, maxY: 425 }].forEach(g => {
         const pos = findNaturalPosition(g.minY, g.maxY, g.r, mineObjects);
         mineObjects.push(createMineralObject(nextItemId++, 'gold', g.kg, g.r, pos.x, pos.y));
         addParticles(pos.x, pos.y, 'gold');
     });
 
-    // 5. Diamond (Rarest - ~40% chance of 1 diamond spawning, never guaranteed 2-3!)
     if (Math.random() < 0.42) {
         const dKg = Math.random() < 0.7 ? 1 : 2;
         const dR = dKg === 1 ? 14 : 16;
@@ -1243,6 +1288,7 @@ function startMode(mode, isGuestOnline = false) {
     p1Score = { goldKg: 0, silverKg: 0, diamondKg: 0, count: 0 };
     p2Score = { goldKg: 0, silverKg: 0, diamondKg: 0, count: 0 };
     particles = []; screenShake = 0;
+    caveTorchEmbers = []; caveWaterDrips = [];
 
     document.getElementById('quiz-card-p1').style.display = 'none';
     document.getElementById('quiz-card-p2').style.display = 'none';
@@ -1251,6 +1297,10 @@ function startMode(mode, isGuestOnline = false) {
     winch1.minX = 55; winch1.maxX = LOGICAL_WIDTH - 55; winch1.x = 200; winch1.dir = 1;
     winch2.minX = 55; winch2.maxX = LOGICAL_WIDTH - 55; winch2.x = 480; winch2.dir = -1;
     winch1.targetX = 200; winch2.targetX = 480;
+
+    const bSolo = document.getElementById('btn-menu-solo'); if (bSolo) bSolo.disabled = false;
+    const bDuo = document.getElementById('btn-menu-duo'); if (bDuo) bDuo.disabled = false;
+    const bOnl = document.getElementById('btn-menu-online'); if (bOnl) bOnl.disabled = false;
 
     if (gameMode === 'duo') {
         document.getElementById('p2-hud').style.display = 'flex';
@@ -1295,7 +1345,6 @@ function gameTimerTick() {
     if (timeLeft <= 30) { timerEl.classList.add('warning'); beep(300, 'square', 0.08, 0.1); }
     else timerEl.classList.remove('warning');
 
-    // EVERY 75 SECONDS: FULL REFRESH / FLUSH OF ALL ORES!
     goldRespawnTimer--;
     if (goldRespawnTimer <= 0) {
         goldRespawnTimer = GOLD_RESPAWN_INTERVAL;
@@ -1346,7 +1395,6 @@ function updateClawMachine(w, pNum) {
                     w.grabbedItem = item; item.grabbedBy = pNum; item.visible = false;
                     sfxHook(); screenShake = 4; addParticles(item.x, item.y, item.type);
 
-                    // Sync remote grab immediately across network!
                     if (gameMode === 'online' && peerConn && isOnlineConnected) {
                         peerConn.send({ type: 'REMOTE_GRAB', player: pNum, itemId: item.id, clawX: w.x, clawLength: w.length });
                     }
@@ -1450,17 +1498,18 @@ function gameLoop() {
     ctx.restore(); animFrameId = requestAnimationFrame(gameLoop);
 }
 
-/* ================= RENDERING MINE ENVIRONMENT ================= */
+/* ================= MINESHAFT CAVE RENDERING =================
+   ATAS  : Interior Goa / Mineshaft (Kayu, Obor Minecraft, Percikan Api, Tetesan Air)
+   BAWAH : Lapisan Tanah Galian Alami Bersih & Luas (Tanpa Kayu/Obor yang Menghalangi)
+============================================================== */
 function renderMineWorld() {
-    const skyGrad = ctx.createLinearGradient(0, 0, 0, SURFACE_RAIL_Y);
-    skyGrad.addColorStop(0, '#2980b9'); skyGrad.addColorStop(0.65, '#6dd5fa'); skyGrad.addColorStop(1, '#a8e6cf');
-    ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, LOGICAL_WIDTH, SURFACE_RAIL_Y);
-
+    // 1. BAGIAN BAWAH: Lapisan Tanah Alami Subterranean (Mulai Dari Bawah Rel y: 82 sampai 460)
     const dirtGrad = ctx.createLinearGradient(0, SURFACE_GROUND_Y, 0, LOGICAL_HEIGHT);
     dirtGrad.addColorStop(0.00, '#66391d'); dirtGrad.addColorStop(0.28, '#502a15');
     dirtGrad.addColorStop(0.65, '#3b1d0c'); dirtGrad.addColorStop(1.00, '#200f06');
     ctx.fillStyle = dirtGrad; ctx.fillRect(0, SURFACE_GROUND_Y, LOGICAL_WIDTH, LOGICAL_HEIGHT - SURFACE_GROUND_Y);
 
+    // Garis Stratifikasi Lapisan Tanah Subterranean
     ctx.save();
     [175, 275, 375].forEach(ly => {
         ctx.strokeStyle = 'rgba(25, 12, 5, 0.45)'; ctx.lineWidth = 4.5;
@@ -1469,12 +1518,14 @@ function renderMineWorld() {
         ctx.beginPath(); ctx.moveTo(0, ly + 2.5); ctx.bezierCurveTo(LOGICAL_WIDTH * 0.3, ly - 6, LOGICAL_WIDTH * 0.7, ly + 11, LOGICAL_WIDTH, ly - 1); ctx.stroke();
     });
 
-    ctx.strokeStyle = '#3e1f0e'; ctx.lineCap = 'round';
+    // Akar-akar pohon bawah tanah alami
     subterraneanRoots.forEach(rt => {
-        ctx.lineWidth = rt.thick; ctx.beginPath(); ctx.moveTo(rt.x, rt.y);
+        ctx.strokeStyle = '#3e1f0e'; ctx.lineCap = 'round'; ctx.lineWidth = rt.thick;
+        ctx.beginPath(); ctx.moveTo(rt.x, rt.y);
         ctx.bezierCurveTo(rt.cp1x, rt.cp1y, rt.cp2x, rt.cp2y, rt.endX, rt.endY); ctx.stroke();
     });
 
+    // Kerikil & mineral kecil dalam tanah
     soilPebbles.forEach(p => {
         ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = p.shade;
         ctx.beginPath(); ctx.ellipse(0, 0, p.rx, p.ry, 0, 0, Math.PI * 2); ctx.fill();
@@ -1482,6 +1533,7 @@ function renderMineWorld() {
         ctx.restore();
     });
 
+    // Partikel debu tanah bercahaya di kedalaman bawah
     ambientMotes.forEach(mt => {
         mt.y += mt.vy; mt.x += mt.vx + Math.sin(animTick + mt.phase) * 0.15;
         if (mt.y < 95) mt.y = LOGICAL_HEIGHT - 20;
@@ -1490,9 +1542,14 @@ function renderMineWorld() {
     });
     ctx.restore();
 
+    // Fosil purba asli di dalam tanah
     drawDinosaurSkullHD(115, 235);
     drawAmmoniteAndRibsHD(LOGICAL_WIDTH - 115, 350);
 
+    // 2. BAGIAN ATAS: GOA / MINESHAFT INTERIOR (0 sampai 82)
+    drawTopCaveInterior();
+
+    // 3. Render Mineral (Emas, Perak, Berlian, Batu Bara, Perk)
     mineObjects.forEach(it => {
         if (!it.visible) return;
         it.sparkle += 0.045;
@@ -1506,8 +1563,7 @@ function renderMineWorld() {
         else if (it.type === 'perk') drawPerkBoxHD(it.x, it.y, it.r, it.sparkle);
     });
 
-    drawGroundBorderAndTracks();
-
+    // 4. Cart Blook di Stasiun Rel Atas
     const p1Blook = (gameMode === 'online') ? ((myOnlinePlayerNum === 1) ? myAvatarBlook : opponentAvatarBlook) : myAvatarBlook;
     const p2Blook = (gameMode === 'online') ? ((myOnlinePlayerNum === 2) ? myAvatarBlook : opponentAvatarBlook) : (gameMode === 'duo' ? 'astronaut' : 'robot');
     let p1CartName = (gameMode === 'online') ? (myOnlinePlayerNum === 1 ? `${myPlayerName} (YOU)` : opponentName) : (gameMode === 'solo' ? `${myPlayerName} (YOU)` : `${myPlayerName} (P1)`);
@@ -1516,6 +1572,7 @@ function renderMineWorld() {
     drawStationaryCart(cartStationP1.x, cartStationP1.y, '#ff4757', p1Blook, 1, winch1, p1CartName);
     if (gameMode !== 'solo') drawStationaryCart(cartStationP2.x, cartStationP2.y, '#2ed573', p2Blook, 2, winch2, p2CartName);
 
+    // 5. Mesin Capit & Jalur Patroli
     const isP1You = (gameMode === 'online') ? (myOnlinePlayerNum === 1) : true;
     const isP2You = (gameMode === 'online') ? (myOnlinePlayerNum === 2) : false;
     let p1ClawLabel = (gameMode === 'online') ? (myOnlinePlayerNum === 1 ? `${myPlayerName}` : opponentName) : (gameMode === 'solo' ? `${myPlayerName}` : `P1 • ${myPlayerName}`);
@@ -1523,19 +1580,208 @@ function renderMineWorld() {
 
     drawCartoonClawMachine(winch1, '#ff4757', p1ClawLabel, isP1You, (gameMode !== 'solo' ? winch2 : null), 1);
     if (gameMode !== 'solo') drawCartoonClawMachine(winch2, '#2ed573', p2ClawLabel, isP2You, winch1, 2);
+
+    // 6. Efek Partikel Goa di Atas: Percikan Api Obor, Tetesan Air Stalaktit, Debu Melayang
+    updateAndDrawTopCaveEffects();
 }
 
-function drawGroundBorderAndTracks() {
-    ctx.fillStyle = '#374151'; ctx.fillRect(0, SURFACE_RAIL_Y - 4, LOGICAL_WIDTH, 5);
-    for (let bx = 4; bx < LOGICAL_WIDTH; bx += 26) {
-        ctx.fillStyle = '#5c3a21'; ctx.fillRect(bx, SURFACE_RAIL_Y - 2, 18, 10);
-        ctx.fillStyle = '#3e2415'; ctx.fillRect(bx + 3, SURFACE_RAIL_Y, 3, 3); ctx.fillRect(bx + 12, SURFACE_RAIL_Y, 3, 3);
+/* ================= DETAIL INTERIOR GOA BAGIAN ATAS ================= */
+function drawTopCaveInterior() {
+    ctx.save();
+
+    // 1. Dinding Batu Gelap Goa Atas (Rocky Cave Wall & Arched Ceiling)
+    const caveRockGrad = ctx.createLinearGradient(0, 0, 0, SURFACE_RAIL_Y);
+    caveRockGrad.addColorStop(0.0, '#100a06');
+    caveRockGrad.addColorStop(0.4, '#1f130b');
+    caveRockGrad.addColorStop(0.85, '#321c10');
+    caveRockGrad.addColorStop(1.0, '#422415');
+    ctx.fillStyle = caveRockGrad;
+    ctx.fillRect(0, 0, LOGICAL_WIDTH, SURFACE_RAIL_Y);
+
+    // Tonjolan-tonjolan batu & stalaktit kecil di langit-langit atas
+    ctx.fillStyle = '#170e08';
+    for (let bx = 10; bx < LOGICAL_WIDTH; bx += 28) {
+        const sh = 6 + Math.sin(bx * 0.4) * 5;
+        ctx.beginPath();
+        ctx.moveTo(bx - 12, 0); ctx.lineTo(bx + 12, 0); ctx.lineTo(bx, sh); ctx.closePath();
+        ctx.fill();
     }
+
+    // 2. Balok Kayu Penyangga Goa (Mineshaft Timber Arch Framework di Atas)
+    // Balok kayu horizontal penahan atap goa
+    ctx.fillStyle = '#5c381c'; ctx.fillRect(0, 0, LOGICAL_WIDTH, 11);
+    ctx.fillStyle = '#3a200f'; ctx.fillRect(0, 8, LOGICAL_WIDTH, 3);
+    ctx.fillStyle = '#7a4b27'; ctx.fillRect(0, 0, LOGICAL_WIDTH, 2);
+
+    // Tiang-tiang kayu penyangga atap goa di area atas
+    const topTimberPillars = [
+        { x: 25, w: 18 }, { x: 190, w: 16 }, { x: 345, w: 18 }, { x: 500, w: 16 }, { x: LOGICAL_WIDTH - 40, w: 18 }
+    ];
+    topTimberPillars.forEach(p => {
+        // Tiang kayu vertikal
+        ctx.fillStyle = '#6d4221'; ctx.fillRect(p.x, 0, p.w, SURFACE_RAIL_Y - 4);
+        ctx.fillStyle = '#482a13'; ctx.fillRect(p.x + p.w - 3, 0, 3, SURFACE_RAIL_Y - 4);
+        ctx.fillStyle = '#8e582d'; ctx.fillRect(p.x, 0, 3, SURFACE_RAIL_Y - 4);
+
+        // Balok siku penopang (wooden brackets) di pojok atas tiang
+        ctx.fillStyle = '#5c381c';
+        ctx.beginPath(); ctx.moveTo(p.x - 7, 0); ctx.lineTo(p.x, 14); ctx.lineTo(p.x, 0); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(p.x + p.w + 7, 0); ctx.lineTo(p.x + p.w, 14); ctx.lineTo(p.x + p.w, 0); ctx.closePath(); ctx.fill();
+
+        // Paku besi/baut pada kayu
+        ctx.fillStyle = '#2f3542';
+        ctx.beginPath(); ctx.arc(p.x + p.w / 2, 7, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(p.x + p.w / 2, 28, 2, 0, Math.PI * 2); ctx.fill();
+    });
+
+    // Jaring laba-laba kartun di sudut balok kayu atas
+    drawCartoonCobweb(35, 11);
+    drawCartoonCobweb(LOGICAL_WIDTH - 45, 11);
+
+    // 3. Obor Minecraft di Dinding Goa Atas (Flickering Torches with Warm Amber Glow)
+    const topTorches = [
+        { x: 38, y: 32, tilt: 0.2 },
+        { x: 200, y: 32, tilt: -0.2 },
+        { x: 355, y: 32, tilt: 0.2 },
+        { x: 510, y: 32, tilt: -0.2 },
+        { x: LOGICAL_WIDTH - 28, y: 32, tilt: -0.2 }
+    ];
+
+    topTorches.forEach((tch, i) => {
+        const flicker = Math.sin(animTick * 6 + i * 2) * 2;
+        const flamePulse = 0.85 + Math.cos(animTick * 8 + i * 3) * 0.15;
+
+        // Pancaran cahaya obor hangat di sekeliling terowongan
+        const tGlow = ctx.createRadialGradient(tch.x, tch.y - 6, 2, tch.x, tch.y - 6, 42 + flicker * 3);
+        tGlow.addColorStop(0, 'rgba(255, 177, 66, 0.42)');
+        tGlow.addColorStop(0.5, 'rgba(255, 121, 63, 0.15)');
+        tGlow.addColorStop(1, 'transparent');
+        ctx.fillStyle = tGlow;
+        ctx.beginPath(); ctx.arc(tch.x, tch.y - 6, 46, 0, Math.PI * 2); ctx.fill();
+
+        // Batang kayu obor
+        ctx.save();
+        ctx.translate(tch.x, tch.y);
+        ctx.rotate(tch.tilt);
+        ctx.fillStyle = '#5c381c'; ctx.fillRect(-2.5, 0, 5, 14);
+        ctx.fillStyle = '#221108'; ctx.fillRect(-2.5, 0, 5, 3); // Ujung batu bara
+
+        // Api Obor Bagian Luar (Merah-Orange)
+        ctx.fillStyle = '#ff4757';
+        ctx.beginPath();
+        ctx.moveTo(0, -14 * flamePulse);
+        ctx.quadraticCurveTo(6, -6, 3, 0);
+        ctx.lineTo(-3, 0);
+        ctx.quadraticCurveTo(-6, -6, 0, -14 * flamePulse);
+        ctx.fill();
+
+        // Inti Api Emas Kuning (Yellow Core Flame)
+        ctx.fillStyle = '#f1c40f';
+        ctx.beginPath();
+        ctx.moveTo(0, -10 * flamePulse);
+        ctx.quadraticCurveTo(3, -5, 1.5, 0);
+        ctx.lineTo(-1.5, 0);
+        ctx.quadraticCurveTo(-3, -5, 0, -10 * flamePulse);
+        ctx.fill();
+
+        // Titik putih pusat api
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(0, -2, 1.5, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+
+        // Percikan api melayang (sparks generation)
+        if (Math.random() < 0.22) {
+            caveTorchEmbers.push({
+                x: tch.x + (Math.random() - 0.5) * 6, y: tch.y - 8,
+                vx: (Math.random() - 0.5) * 0.6, vy: -0.7 - Math.random() * 0.6,
+                sz: 1.2 + Math.random() * 1.5, life: 1.0, col: (Math.random() > 0.4 ? '#f39c12' : '#e74c3c')
+            });
+        }
+    });
+
+    // 4. Lantai Terowongan Goa / Bantalan Rel Kereta Tambang (Surface Ground Y)
+    // Balok kayu bantalan rel
+    ctx.fillStyle = '#2d180c'; ctx.fillRect(0, SURFACE_RAIL_Y - 4, LOGICAL_WIDTH, 6);
+    for (let bx = 4; bx < LOGICAL_WIDTH; bx += 26) {
+        ctx.fillStyle = '#5c3a21'; ctx.fillRect(bx, SURFACE_RAIL_Y - 2, 18, 9);
+        ctx.fillStyle = '#3a200f'; ctx.fillRect(bx + 3, SURFACE_RAIL_Y, 3, 3); ctx.fillRect(bx + 12, SURFACE_RAIL_Y, 3, 3);
+    }
+    // Batang Besi Rel Tambang (Steel Rails with Metallic Glint)
     ctx.fillStyle = '#78909c'; ctx.fillRect(0, SURFACE_RAIL_Y, LOGICAL_WIDTH, 4.5);
     ctx.fillStyle = '#ffffff'; ctx.fillRect(0, SURFACE_RAIL_Y, LOGICAL_WIDTH, 1.2);
-    const grassGrad = ctx.createLinearGradient(0, SURFACE_RAIL_Y + 4, 0, SURFACE_GROUND_Y + 8);
-    grassGrad.addColorStop(0, '#2ecc71'); grassGrad.addColorStop(1, '#27ae60');
-    ctx.fillStyle = grassGrad; ctx.fillRect(0, SURFACE_RAIL_Y + 4, LOGICAL_WIDTH, 13);
+
+    // Lapisan bibir tanah pembatas goa ke kedalaman tanah
+    const lipGrad = ctx.createLinearGradient(0, SURFACE_RAIL_Y + 4, 0, SURFACE_GROUND_Y + 4);
+    lipGrad.addColorStop(0, '#5a341a'); lipGrad.addColorStop(1, '#66391d');
+    ctx.fillStyle = lipGrad; ctx.fillRect(0, SURFACE_RAIL_Y + 4, LOGICAL_WIDTH, 9);
+
+    ctx.restore();
+}
+
+function drawCartoonCobweb(x, y) {
+    ctx.save(); ctx.strokeStyle = 'rgba(245, 246, 250, 0.4)'; ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(x, y); ctx.lineTo(x + 18, y);
+    ctx.moveTo(x, y); ctx.lineTo(x, y + 18);
+    ctx.moveTo(x, y); ctx.lineTo(x + 15, y + 15);
+    ctx.arc(x, y, 8, 0, Math.PI * 0.5);
+    ctx.arc(x, y, 14, 0, Math.PI * 0.5);
+    ctx.stroke(); ctx.restore();
+}
+
+/* ================= UPDATE & DRAW EFEK PARTIKEL GOA ATAS ================= */
+function updateAndDrawTopCaveEffects() {
+    ctx.save();
+
+    // 1. Percikan Api Obor (Torch Sparks / Embers)
+    for (let i = caveTorchEmbers.length - 1; i >= 0; i--) {
+        const e = caveTorchEmbers[i];
+        e.x += e.vx; e.y += e.vy; e.life -= 0.038;
+        if (e.life <= 0 || e.y < 0) { caveTorchEmbers.splice(i, 1); continue; }
+        ctx.globalAlpha = Math.max(0, e.life);
+        ctx.fillStyle = e.col;
+        ctx.beginPath(); ctx.arc(e.x, e.y, e.sz, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // 2. Tetesan Air Goa (Stalactite Water Drips Falling From Ceiling)
+    if (Math.random() < 0.045) {
+        caveWaterDrips.push({
+            x: 50 + Math.random() * (LOGICAL_WIDTH - 100),
+            y: 5, vy: 1.2, r: 1.8, splat: 0
+        });
+    }
+    for (let i = caveWaterDrips.length - 1; i >= 0; i--) {
+        const d = caveWaterDrips[i];
+        if (d.splat > 0) {
+            d.splat += 0.18;
+            ctx.globalAlpha = Math.max(0, 1.0 - d.splat);
+            ctx.strokeStyle = '#00d2d3'; ctx.lineWidth = 1.2;
+            ctx.beginPath(); ctx.ellipse(d.x, SURFACE_RAIL_Y - 1, d.splat * 4, d.splat * 1.5, 0, 0, Math.PI * 2); ctx.stroke();
+            if (d.splat >= 1.0) caveWaterDrips.splice(i, 1);
+            continue;
+        }
+        d.vy += 0.22; d.y += d.vy;
+        ctx.globalAlpha = 0.75;
+        ctx.fillStyle = '#74b9ff';
+        ctx.beginPath(); ctx.ellipse(d.x, d.y, d.r, d.r * 1.6, 0, 0, Math.PI * 2); ctx.fill();
+        if (d.y >= SURFACE_RAIL_Y - 2) {
+            d.splat = 0.1;
+        }
+    }
+
+    // 3. Debu Mengambang di Atas (Atmospheric Cave Dust in Torchlight)
+    caveDustMotes.forEach(mt => {
+        mt.x += mt.vx; mt.y += mt.vy;
+        if (mt.y < 6) mt.y = SURFACE_RAIL_Y - 6;
+        if (mt.x < 10) mt.x = LOGICAL_WIDTH - 10;
+        if (mt.x > LOGICAL_WIDTH - 10) mt.x = 10;
+        const dustAlpha = 0.2 + Math.sin(animTick * 2 + mt.phase) * 0.18;
+        ctx.globalAlpha = Math.max(0, dustAlpha);
+        ctx.fillStyle = '#ffeaa7';
+        ctx.beginPath(); ctx.arc(mt.x, mt.y, mt.r, 0, Math.PI * 2); ctx.fill();
+    });
+
+    ctx.restore();
 }
 
 function drawStationaryCart(x, y, primaryColor, blookId, pNum, winchRef, playerName) {
@@ -1572,7 +1818,6 @@ function drawStationaryCart(x, y, primaryColor, blookId, pNum, winchRef, playerN
     ctx.restore();
 }
 
-/* SMART CLAW WITH ARTICULATED VISUALS & HYDRAULICS */
 function drawCartoonClawMachine(w, color, displayName, isYou, otherWinch, pNum) {
     const tipX = Math.round(w.x + (w.strainX || 0));
     const tipY = Math.round(w.y + w.length);
@@ -1585,7 +1830,6 @@ function drawCartoonClawMachine(w, color, displayName, isYou, otherWinch, pNum) 
 
     ctx.save();
     let badgeY = SURFACE_RAIL_Y - 24;
-    // Stagger horizontally or vertically if claws cross paths to prevent bubble collision
     if (otherWinch && Math.abs(w.x - otherWinch.x) < 70) badgeY = (pNum === 1) ? (SURFACE_RAIL_Y - 34) : (SURFACE_RAIL_Y - 14);
     ctx.translate(tipX, badgeY);
     ctx.font = isYou ? '900 12px Nunito, sans-serif' : '900 11px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -1609,7 +1853,6 @@ function drawCartoonClawMachine(w, color, displayName, isYou, otherWinch, pNum) 
     ctx.beginPath(); ctx.moveTo(w.x, SURFACE_RAIL_Y + 5); ctx.lineTo(tipX, tipY); ctx.stroke();
     ctx.restore();
 
-    // Draw grabbed mineral directly clamped inside the claw jaws
     if (w.grabbedItem) {
         const gi = w.grabbedItem;
         if (gi.type === 'gold') drawGoldHD(tipX, tipY + 16, gi.r, gi.kg, gi.offsets, gi.crystals, 0);
@@ -1664,17 +1907,12 @@ function drawCartoonClawMachine(w, color, displayName, isYou, otherWinch, pNum) 
     ctx.restore();
 }
 
-/* ================= PREHISTORIC FOSSILS ================= */
 function drawDinosaurSkullHD(x, y) {
-    ctx.save();
-    ctx.translate(x, y);
-
+    ctx.save(); ctx.translate(x, y);
     ctx.fillStyle = 'rgba(25, 12, 5, 0.55)';
     ctx.beginPath(); ctx.ellipse(0, 0, 52, 34, -0.06, 0, Math.PI * 2); ctx.fill();
 
-    ctx.fillStyle = '#e8dcc4';
-    ctx.strokeStyle = '#8d785a';
-    ctx.lineWidth = 2;
+    ctx.fillStyle = '#e8dcc4'; ctx.strokeStyle = '#8d785a'; ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(-35, 14); ctx.lineTo(25, 12); ctx.lineTo(28, 6); ctx.lineTo(-20, 6); ctx.closePath();
     ctx.fill(); ctx.stroke();
@@ -1686,13 +1924,8 @@ function drawDinosaurSkullHD(x, y) {
 
     ctx.fillStyle = '#f5f0e1';
     ctx.beginPath();
-    ctx.moveTo(-38, 2);
-    ctx.lineTo(-42, -18);
-    ctx.quadraticCurveTo(-20, -32, 12, -26);
-    ctx.lineTo(36, -10);
-    ctx.lineTo(38, 4);
-    ctx.lineTo(0, 2);
-    ctx.closePath();
+    ctx.moveTo(-38, 2); ctx.lineTo(-42, -18); ctx.quadraticCurveTo(-20, -32, 12, -26);
+    ctx.lineTo(36, -10); ctx.lineTo(38, 4); ctx.lineTo(0, 2); ctx.closePath();
     ctx.fill(); ctx.stroke();
 
     ctx.fillStyle = '#1c1008';
@@ -1708,8 +1941,7 @@ function drawDinosaurSkullHD(x, y) {
 }
 
 function drawAmmoniteAndRibsHD(x, y) {
-    ctx.save();
-    ctx.translate(x, y);
+    ctx.save(); ctx.translate(x, y);
     ctx.fillStyle = 'rgba(25, 12, 5, 0.55)';
     ctx.beginPath(); ctx.ellipse(0, 0, 46, 30, 0.1, 0, Math.PI * 2); ctx.fill();
 
@@ -1718,8 +1950,7 @@ function drawAmmoniteAndRibsHD(x, y) {
         ctx.beginPath(); ctx.moveTo(rx, -10); ctx.quadraticCurveTo(rx + 6, 8, rx - 3, 16); ctx.stroke();
     });
 
-    ctx.save();
-    ctx.translate(22, 2);
+    ctx.save(); ctx.translate(22, 2);
     ctx.strokeStyle = '#f5f0e1'; ctx.lineWidth = 2.4;
     ctx.beginPath();
     let ang = 0;
@@ -1729,16 +1960,12 @@ function drawAmmoniteAndRibsHD(x, y) {
         if (r === 2) ctx.moveTo(px, py); else ctx.lineTo(px, py);
     }
     ctx.stroke();
-    ctx.restore();
-    ctx.restore();
+    ctx.restore(); ctx.restore();
 }
 
-/* ================= MINERAL ORE GRAPHICS (NO COAL BACKGROUND) ================= */
-
-/* 1. STANDALONE BRILLIANT DIAMOND */
+/* ================= MINERAL ORE GRAPHICS ================= */
 function drawDiamondHD(x, y, r, kg, time) {
-    ctx.save();
-    ctx.translate(x, y);
+    ctx.save(); ctx.translate(x, y);
 
     const pulse = 0.35 + Math.sin(time * 3.8) * 0.15;
     const diaAura = ctx.createRadialGradient(0, 0, r * 0.2, 0, 0, r + 11);
@@ -1750,18 +1977,13 @@ function drawDiamondHD(x, y, r, kg, time) {
 
     const w = r * 1.3, h = r * 1.4;
     ctx.beginPath();
-    ctx.moveTo(0, h * 0.75);
-    ctx.lineTo(-w * 0.75, -h * 0.05);
-    ctx.lineTo(-w * 0.45, -h * 0.65);
-    ctx.lineTo(w * 0.45, -h * 0.65);
-    ctx.lineTo(w * 0.75, -h * 0.05);
-    ctx.closePath();
+    ctx.moveTo(0, h * 0.75); ctx.lineTo(-w * 0.75, -h * 0.05);
+    ctx.lineTo(-w * 0.45, -h * 0.65); ctx.lineTo(w * 0.45, -h * 0.65);
+    ctx.lineTo(w * 0.75, -h * 0.05); ctx.closePath();
 
     const dg = ctx.createLinearGradient(-w, -h, w, h);
-    dg.addColorStop(0, '#ffffff');
-    dg.addColorStop(0.3, '#70a1ff');
-    dg.addColorStop(0.65, '#00d2d3');
-    dg.addColorStop(1, '#0984e3');
+    dg.addColorStop(0, '#ffffff'); dg.addColorStop(0.3, '#70a1ff');
+    dg.addColorStop(0.65, '#00d2d3'); dg.addColorStop(1, '#0984e3');
     ctx.fillStyle = dg; ctx.fill();
     ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.2; ctx.stroke();
 
@@ -1782,12 +2004,9 @@ function drawDiamondHD(x, y, r, kg, time) {
     ctx.restore();
 }
 
-/* 2. NATURAL RAW GOLD CRYSTALLINE CLUSTER (NO BLACK COAL BACKING) */
 function drawGoldHD(x, y, r, kg, offsets, crystals, time) {
-    ctx.save();
-    ctx.translate(x, y);
+    ctx.save(); ctx.translate(x, y);
 
-    // Warm golden luminescent aura
     const auraPulse = 0.28 + Math.sin(time * 2.8) * 0.12;
     const goldAura = ctx.createRadialGradient(0, 0, r * 0.2, 0, 0, r + 13);
     goldAura.addColorStop(0, `rgba(255, 242, 175, ${auraPulse + 0.15})`);
@@ -1796,7 +2015,6 @@ function drawGoldHD(x, y, r, kg, offsets, crystals, time) {
     ctx.fillStyle = goldAura;
     ctx.beginPath(); ctx.arc(0, 0, r + 13, 0, Math.PI * 2); ctx.fill();
 
-    // Natural Raw Gold Nugget Cluster Body (Deep metallic amber with quartz bevels)
     ctx.beginPath();
     for (let i = 0; i < offsets.length; i++) {
         const ang = (i / offsets.length) * Math.PI * 2, rad = r * offsets[i];
@@ -1805,53 +2023,33 @@ function drawGoldHD(x, y, r, kg, offsets, crystals, time) {
     }
     ctx.closePath();
     const gGrad = ctx.createLinearGradient(-r, -r, r, r);
-    gGrad.addColorStop(0, '#fff6b0');
-    gGrad.addColorStop(0.25, '#f1c40f');
-    gGrad.addColorStop(0.65, '#e67e22');
-    gGrad.addColorStop(1, '#b7791f');
+    gGrad.addColorStop(0, '#fff6b0'); gGrad.addColorStop(0.25, '#f1c40f');
+    gGrad.addColorStop(0.65, '#e67e22'); gGrad.addColorStop(1, '#b7791f');
     ctx.fillStyle = gGrad; ctx.fill();
     ctx.strokeStyle = '#b7791f'; ctx.lineWidth = 2.5; ctx.stroke();
 
-    // Specular faceted planes & quartz matrix veins within the gold
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)'; ctx.lineWidth = 1.6;
     ctx.beginPath();
     ctx.moveTo(-r * 0.5, -r * 0.3); ctx.lineTo(-r * 0.1, 0); ctx.lineTo(-r * 0.3, r * 0.45);
     ctx.moveTo(r * 0.2, -r * 0.5); ctx.lineTo(0, 0); ctx.lineTo(r * 0.45, r * 0.3);
     ctx.stroke();
 
-    // Natural 3D gold crystal prisms radiating organically
     if (crystals && crystals.length) {
         crystals.forEach(cr => {
-            ctx.save();
-            ctx.translate(cr.cx, cr.cy);
-            ctx.rotate(cr.rot);
-
+            ctx.save(); ctx.translate(cr.cx, cr.cy); ctx.rotate(cr.rot);
             const cg = ctx.createLinearGradient(-cr.w, -cr.h, cr.w, cr.h);
-            cg.addColorStop(0, '#ffffff');
-            cg.addColorStop(0.3, '#f9ca24');
-            cg.addColorStop(0.85, '#d35400');
-            cg.addColorStop(1, '#8c4a00');
+            cg.addColorStop(0, '#ffffff'); cg.addColorStop(0.3, '#f9ca24');
+            cg.addColorStop(0.85, '#d35400'); cg.addColorStop(1, '#8c4a00');
             ctx.fillStyle = cg;
-
             ctx.beginPath();
-            ctx.moveTo(0, -cr.h * 0.7);
-            ctx.lineTo(cr.w * 0.55, -cr.h * 0.2);
-            ctx.lineTo(cr.w * 0.45, cr.h * 0.6);
-            ctx.lineTo(-cr.w * 0.45, cr.h * 0.6);
-            ctx.lineTo(-cr.w * 0.55, -cr.h * 0.2);
-            ctx.closePath();
-            ctx.fill();
+            ctx.moveTo(0, -cr.h * 0.7); ctx.lineTo(cr.w * 0.55, -cr.h * 0.2);
+            ctx.lineTo(cr.w * 0.45, cr.h * 0.6); ctx.lineTo(-cr.w * 0.45, cr.h * 0.6);
+            ctx.lineTo(-cr.w * 0.55, -cr.h * 0.2); ctx.closePath(); ctx.fill();
 
-            // Shiny crystal ridge
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.beginPath();
-            ctx.moveTo(0, -cr.h * 0.7);
-            ctx.lineTo(cr.w * 0.55, -cr.h * 0.2);
-            ctx.lineTo(0, cr.h * 0.5);
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.restore();
+            ctx.moveTo(0, -cr.h * 0.7); ctx.lineTo(cr.w * 0.55, -cr.h * 0.2); ctx.lineTo(0, cr.h * 0.5);
+            ctx.closePath(); ctx.fill(); ctx.restore();
         });
     }
 
@@ -1859,17 +2057,13 @@ function drawGoldHD(x, y, r, kg, offsets, crystals, time) {
     drawDiamondCrossGlint(ctx, -r * 0.35, -r * 0.3, 7.5, time * 2, glintPhase);
     drawDiamondCrossGlint(ctx, r * 0.35, r * 0.25, 5.5, -time * 1.8, 1 - glintPhase);
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '900 12px Fredoka One'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff'; ctx.font = '900 12px Fredoka One'; ctx.textAlign = 'center';
     ctx.shadowColor = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 4;
-    ctx.fillText(`${kg}kg`, 0, r + 14);
-    ctx.restore();
+    ctx.fillText(`${kg}kg`, 0, r + 14); ctx.restore();
 }
 
-/* 3. NATURAL RAW SILVER CRYSTALLINE CLUSTER (NO BLACK COAL BACKING) */
 function drawSilverHD(x, y, r, kg, offsets, crystals, time) {
-    ctx.save();
-    ctx.translate(x, y);
+    ctx.save(); ctx.translate(x, y);
 
     const silverPulse = 0.22 + Math.sin(time * 3.2) * 0.1;
     const silverAura = ctx.createRadialGradient(0, 0, r * 0.2, 0, 0, r + 12);
@@ -1879,7 +2073,6 @@ function drawSilverHD(x, y, r, kg, offsets, crystals, time) {
     ctx.fillStyle = silverAura;
     ctx.beginPath(); ctx.arc(0, 0, r + 12, 0, Math.PI * 2); ctx.fill();
 
-    // Raw Silver Crystalline Body
     ctx.beginPath();
     for (let i = 0; i < offsets.length; i++) {
         const ang = (i / offsets.length) * Math.PI * 2, rad = r * offsets[i];
@@ -1895,52 +2088,35 @@ function drawSilverHD(x, y, r, kg, offsets, crystals, time) {
     ctx.fillStyle = sGrad; ctx.fill();
     ctx.strokeStyle = '#718093'; ctx.lineWidth = 2.4; ctx.stroke();
 
-    // Geometric Chrome Prisms
     if (crystals && crystals.length) {
         crystals.forEach(cr => {
-            ctx.save();
-            ctx.translate(cr.cx, cr.cy);
-            ctx.rotate(cr.rot);
-
+            ctx.save(); ctx.translate(cr.cx, cr.cy); ctx.rotate(cr.rot);
             const sg = ctx.createLinearGradient(-cr.w, -cr.h, cr.w, cr.h);
             sg.addColorStop(0, '#ffffff');
             sg.addColorStop(0.4, '#dcdde1');
             sg.addColorStop(0.8, '#718093');
             sg.addColorStop(1, '#3d4852');
             ctx.fillStyle = sg;
-
             ctx.beginPath();
-            ctx.moveTo(0, -cr.h * 0.7);
-            ctx.lineTo(cr.w * 0.55, -cr.h * 0.2);
-            ctx.lineTo(cr.w * 0.45, cr.h * 0.6);
-            ctx.lineTo(-cr.w * 0.45, cr.h * 0.6);
-            ctx.lineTo(-cr.w * 0.55, -cr.h * 0.2);
-            ctx.closePath();
-            ctx.fill();
+            ctx.moveTo(0, -cr.h * 0.7); ctx.lineTo(cr.w * 0.55, -cr.h * 0.2);
+            ctx.lineTo(cr.w * 0.45, cr.h * 0.6); ctx.lineTo(-cr.w * 0.45, cr.h * 0.6);
+            ctx.lineTo(-cr.w * 0.55, -cr.h * 0.2); ctx.closePath(); ctx.fill();
 
             ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
             ctx.beginPath();
-            ctx.moveTo(0, -cr.h * 0.7);
-            ctx.lineTo(cr.w * 0.55, -cr.h * 0.2);
-            ctx.lineTo(0, cr.h * 0.5);
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.restore();
+            ctx.moveTo(0, -cr.h * 0.7); ctx.lineTo(cr.w * 0.55, -cr.h * 0.2); ctx.lineTo(0, cr.h * 0.5);
+            ctx.closePath(); ctx.fill(); ctx.restore();
         });
     }
 
     const glintPhase = (Math.sin(time * 4) + 1) / 2;
     drawDiamondCrossGlint(ctx, -r * 0.35, -r * 0.25, 6.5, time * 2.2, glintPhase);
 
-    ctx.fillStyle = '#f1f2f6';
-    ctx.font = '900 11px Fredoka One'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#f1f2f6'; ctx.font = '900 11px Fredoka One'; ctx.textAlign = 'center';
     ctx.shadowColor = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 4;
-    ctx.fillText(`${kg}kg`, 0, r + 13);
-    ctx.restore();
+    ctx.fillText(`${kg}kg`, 0, r + 13); ctx.restore();
 }
 
-/* 4. COAL IS THE ONLY BLACK ANTHRACITE ROCK */
 function drawCoalHD(x, y, r, offsets) {
     ctx.save(); ctx.translate(x, y);
     ctx.beginPath();
@@ -1959,8 +2135,7 @@ function drawCoalHD(x, y, r, offsets) {
     ctx.beginPath(); ctx.moveTo(-r * 0.4, -r * 0.5); ctx.lineTo(r * 0.1, -r * 0.6); ctx.lineTo(-r * 0.1, -r * 0.1); ctx.closePath(); ctx.fill();
 
     ctx.fillStyle = '#9ca3af'; ctx.font = 'bold 12px Fredoka One'; ctx.textAlign = 'center';
-    ctx.fillText("><", 0, 3);
-    ctx.restore();
+    ctx.fillText("><", 0, 3); ctx.restore();
 }
 
 function drawPerkBoxHD(x, y, r, time) {
@@ -1993,66 +2168,196 @@ function updateAndDrawParticles() {
     }
 }
 
-/* ================= SHOWDOWN SCALE: FINAL REVEAL ================= */
+/* ================= SMOOTH SHOWDOWN SCALE WITH SPRING PHYSICS ================= */
+let scaleAnimId = null;
+let scaleParticles = [];
+
 function endGameByTime() {
     showScreen('screen-scale'); sfxFanfare();
     const scv = document.getElementById('scaleCanvas'), sctx = scv.getContext('2d');
-    scv.width = 440 * dpr; scv.height = 240 * dpr;
-    scv.style.width = '440px'; scv.style.height = '240px';
+    scv.width = 480 * dpr; scv.height = 250 * dpr;
+    scv.style.width = '480px'; scv.style.height = '250px';
     sctx.setTransform(1, 0, 0, 1, 0, 0); sctx.scale(dpr, dpr);
 
     const m1 = calcCash(p1Score.goldKg, p1Score.silverKg, p1Score.diamondKg);
     const m2 = calcCash(p2Score.goldKg, p2Score.silverKg, p2Score.diamondKg);
 
-    let targetAngle = 0;
-    if (gameMode === 'solo') targetAngle = -0.15;
-    else { if (m1 > m2) targetAngle = -0.18; else if (m2 > m1) targetAngle = 0.18; }
+    let finalTilt = 0;
+    if (gameMode === 'solo') {
+        finalTilt = m1 >= 1000 ? -0.22 : 0.22;
+    } else {
+        if (m1 > m2) finalTilt = -0.24;
+        else if (m2 > m1) finalTilt = 0.24;
+        else finalTilt = 0;
+    }
 
-    let currAngle = 0, animTicks = 0;
-    function renderScale() {
-        sctx.clearRect(0, 0, 440, 240);
-        currAngle += (targetAngle - currAngle) * 0.05;
+    let currentAngle = 0;
+    let angleVelocity = 0;
+    let animTicks = 0;
+    let panP1Bounce = 0, panP2Bounce = 0;
+    let itemsDroppedP1 = false, itemsDroppedP2 = false;
+    scaleParticles = [];
 
-        sctx.fillStyle = '#7f8c8d'; sctx.beginPath(); sctx.moveTo(220, 120); sctx.lineTo(190, 210); sctx.lineTo(250, 210); sctx.fill();
-        sctx.save(); sctx.translate(220, 120); sctx.rotate(currAngle);
-        sctx.fillStyle = '#d35400'; sctx.fillRect(-140, -5, 280, 10);
+    const p1NameTag = (gameMode === 'online' && myOnlinePlayerNum === 2) ? opponentName : myPlayerName;
+    const p2NameTag = (gameMode === 'online' && myOnlinePlayerNum === 2) ? myPlayerName : (gameMode === 'solo' ? 'Goal $1,000' : opponentName);
 
-        const p1NameTag = (gameMode === 'online' && myOnlinePlayerNum === 2) ? opponentName : myPlayerName;
-        const p2NameTag = (gameMode === 'online' && myOnlinePlayerNum === 2) ? myPlayerName : (gameMode === 'solo' ? 'Target $1.000' : opponentName);
+    if (scaleAnimId) cancelAnimationFrame(scaleAnimId);
 
-        drawScalePlate(sctx, -120, 0, `${p1Score.goldKg}G|${p1Score.silverKg}S|${p1Score.diamondKg}D`, formatMoney(m1), '#ff4757', p1NameTag);
-        drawScalePlate(sctx, 120, 0, (gameMode === 'solo' ? '-' : `${p2Score.goldKg}G|${p2Score.silverKg}S|${p2Score.diamondKg}D`), (gameMode === 'solo' ? 'Goal: $1,000' : formatMoney(m2)), '#2ed573', p2NameTag);
+    function runScaleSimulation() {
+        animTicks++;
+        sctx.clearRect(0, 0, 480, 250);
+
+        if (animTicks === 25 && !itemsDroppedP1) {
+            itemsDroppedP1 = true;
+            panP1Bounce = 16;
+            angleVelocity -= 0.055;
+            sfxScalePlop();
+            spawnScaleConfetti(110, 160, '#ff4757', 15);
+        }
+        if (animTicks === 50 && !itemsDroppedP2) {
+            itemsDroppedP2 = true;
+            panP2Bounce = 16;
+            angleVelocity += 0.065;
+            sfxScalePlop();
+            spawnScaleConfetti(370, 160, '#2ed573', 15);
+        }
+
+        let targetNow = (animTicks > 75) ? finalTilt : (animTicks > 50 ? finalTilt * 0.5 : 0);
+        let springForce = (targetNow - currentAngle) * 0.052;
+        angleVelocity += springForce;
+        angleVelocity *= 0.88;
+        currentAngle += angleVelocity;
+
+        panP1Bounce *= 0.85;
+        panP2Bounce *= 0.85;
+
+        // Base Stand
+        sctx.save();
+        sctx.fillStyle = '#2f3542';
+        sctx.beginPath();
+        sctx.moveTo(240, 125); sctx.lineTo(210, 225); sctx.lineTo(270, 225); sctx.closePath(); sctx.fill();
+        sctx.fillStyle = '#57606f'; sctx.beginPath(); sctx.roundRect(195, 222, 90, 12, 6); sctx.fill();
         sctx.restore();
 
-        if (animTicks < 75) { animTicks++; requestAnimationFrame(renderScale); }
-        else {
+        // Rotating Beam
+        sctx.save();
+        sctx.translate(240, 125);
+        sctx.rotate(currentAngle);
+
+        const beamGrad = sctx.createLinearGradient(-150, 0, 150, 0);
+        beamGrad.addColorStop(0, '#d35400'); beamGrad.addColorStop(0.5, '#f39c12'); beamGrad.addColorStop(1, '#d35400');
+        sctx.fillStyle = beamGrad;
+        sctx.beginPath(); sctx.roundRect(-155, -6, 310, 12, 5); sctx.fill();
+        sctx.strokeStyle = '#b7791f'; sctx.lineWidth = 2; sctx.stroke();
+
+        // Center Brass Gear & Pointer Dial
+        sctx.fillStyle = '#f1c40f'; sctx.beginPath(); sctx.arc(0, 0, 14, 0, Math.PI * 2); sctx.fill();
+        sctx.strokeStyle = '#e67e22'; sctx.lineWidth = 2.5; sctx.stroke();
+
+        sctx.save();
+        sctx.rotate(-currentAngle * 1.5);
+        sctx.strokeStyle = '#e74c3c'; sctx.lineWidth = 3; sctx.lineCap = 'round';
+        sctx.beginPath(); sctx.moveTo(0, 0); sctx.lineTo(0, -28); sctx.stroke();
+        sctx.restore();
+
+        drawScaleHangingPlate(sctx, -130, 0, panP1Bounce, -currentAngle, `${p1Score.goldKg}G•${p1Score.silverKg}S•${p1Score.diamondKg}D`, formatMoney(m1), '#ff4757', p1NameTag, animTicks > 25);
+        drawScaleHangingPlate(sctx, 130, 0, panP2Bounce, -currentAngle, (gameMode === 'solo' ? '-' : `${p2Score.goldKg}G•${p2Score.silverKg}S•${p2Score.diamondKg}D`), (gameMode === 'solo' ? 'Target: $1,000' : formatMoney(m2)), '#2ed573', p2NameTag, animTicks > 50);
+
+        sctx.restore();
+
+        updateScaleConfetti(sctx);
+
+        if (animTicks < 140) {
+            scaleAnimId = requestAnimationFrame(runScaleSimulation);
+        } else {
             const banner = document.getElementById('winner-banner');
             let winnerTitle = '';
-            if (m1 > m2) {
-                winnerTitle = (gameMode === 'online') ? (myOnlinePlayerNum === 1 ? myPlayerName : opponentName) : myPlayerName;
-                banner.innerHTML = `🏆 <span style="color:var(--p1-col)">${winnerTitle} Wins!</span> Brought home ${formatMoney(m1)}!`;
-            } else if (m2 > m1) {
-                winnerTitle = (gameMode === 'online') ? (myOnlinePlayerNum === 2 ? myPlayerName : opponentName) : opponentName;
-                banner.innerHTML = `🏆 <span style="color:var(--p2-col)">${winnerTitle} Wins!</span> Brought home ${formatMoney(m2)}!`;
+            if (gameMode === 'solo') {
+                if (m1 >= 1000) {
+                    banner.innerHTML = `🎉 <span style="color:var(--p1-col)">EXPEDITION SUCCESS!</span> You earned ${formatMoney(m1)}!`;
+                    spawnScaleConfetti(240, 100, '#f1c40f', 50);
+                } else {
+                    banner.innerHTML = `⚠️ <span style="color:#e67e22">EXPEDITION SHORTFALL!</span> Earned ${formatMoney(m1)} of $1,000 goal!`;
+                }
             } else {
-                banner.innerHTML = `🤝 It's a Tie! Both players brought home ${formatMoney(m1)}!`;
+                if (m1 > m2) {
+                    winnerTitle = (gameMode === 'online') ? (myOnlinePlayerNum === 1 ? myPlayerName : opponentName) : myPlayerName;
+                    banner.innerHTML = `🏆 <span style="color:var(--p1-col)">${winnerTitle} Wins!</span> Brought home ${formatMoney(m1)}!`;
+                    spawnScaleConfetti(110, 130, '#ff4757', 50);
+                } else if (m2 > m1) {
+                    winnerTitle = (gameMode === 'online') ? (myOnlinePlayerNum === 2 ? myPlayerName : opponentName) : opponentName;
+                    banner.innerHTML = `🏆 <span style="color:var(--p2-col)">${winnerTitle} Wins!</span> Brought home ${formatMoney(m2)}!`;
+                    spawnScaleConfetti(370, 130, '#2ed573', 50);
+                } else {
+                    banner.innerHTML = `🤝 It's a Tie! Both players mined ${formatMoney(m1)}!`;
+                    spawnScaleConfetti(240, 110, '#f1c40f', 50);
+                }
             }
         }
     }
-    renderScale();
+    scaleAnimId = requestAnimationFrame(runScaleSimulation);
 }
 
-function drawScalePlate(ctx, x, y, oreWeight, money, col, nameLabel) {
-    ctx.save(); ctx.translate(x, y);
-    ctx.strokeStyle = '#bdc3c7'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(0, 5); ctx.lineTo(-24, 45); ctx.moveTo(0, 5); ctx.lineTo(24, 45); ctx.stroke();
-    ctx.fillStyle = col; ctx.beginPath(); ctx.arc(0, 45, 28, 0, Math.PI); ctx.fill();
-    ctx.fillStyle = '#2c3e50'; ctx.font = 'bold 10px Fredoka One'; ctx.textAlign = 'center';
-    ctx.fillText(nameLabel || '', 0, 38); ctx.fillText(oreWeight, 0, 58); ctx.fillText(money, 0, 72);
+function drawScaleHangingPlate(ctx, x, y, bounce, counterAngle, oreStats, moneyVal, color, name, showOres) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(counterAngle);
+
+    ctx.strokeStyle = '#95a5a6'; ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.moveTo(0, 0); ctx.lineTo(-26, 48 + bounce);
+    ctx.moveTo(0, 0); ctx.lineTo(26, 48 + bounce);
+    ctx.stroke();
+
+    const plateY = 48 + bounce;
+    const bowlGrad = ctx.createLinearGradient(0, plateY, 0, plateY + 18);
+    bowlGrad.addColorStop(0, '#f1f2f6'); bowlGrad.addColorStop(1, '#ced6e0');
+    ctx.fillStyle = bowlGrad;
+    ctx.beginPath();
+    ctx.ellipse(0, plateY, 34, 10, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = color; ctx.lineWidth = 3.5; ctx.stroke();
+
+    if (showOres) {
+        ctx.fillStyle = '#f1c40f'; ctx.beginPath(); ctx.arc(-8, plateY - 5, 8, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#dcdde1'; ctx.beginPath(); ctx.arc(6, plateY - 4, 7, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#00d2d3'; ctx.beginPath(); ctx.arc(0, plateY - 9, 6, 0, Math.PI*2); ctx.fill();
+    }
+
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.roundRect(-45, plateY + 12, 90, 36, 10); ctx.fill();
+    ctx.fillStyle = '#ffffff'; ctx.font = '900 11px Nunito, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(name, 0, plateY + 24);
+    ctx.font = 'bold 12px Fredoka One';
+    ctx.fillText(moneyVal, 0, plateY + 40);
+
     ctx.restore();
 }
 
-/* ================= MAIN MENU DIORAMA ================= */
+function spawnScaleConfetti(cx, cy, baseColor, count) {
+    const colors = [baseColor, '#f1c40f', '#ffffff', '#2ed573', '#ff4757', '#00d2d3'];
+    for (let i = 0; i < count; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        const spd = 2 + Math.random() * 5.5;
+        scaleParticles.push({
+            x: cx, y: cy, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd - 2.5,
+            sz: 3 + Math.random() * 4, rot: Math.random() * Math.PI,
+            vRot: (Math.random() - 0.5) * 0.2, col: colors[Math.floor(Math.random() * colors.length)],
+            life: 1.0, decay: 0.015 + Math.random() * 0.02
+        });
+    }
+}
+function updateScaleConfetti(sctx) {
+    for (let i = scaleParticles.length - 1; i >= 0; i--) {
+        const p = scaleParticles[i]; p.x += p.vx; p.y += p.vy; p.vy += 0.14;
+        p.rot += p.vRot; p.life -= p.decay;
+        if (p.life <= 0) { scaleParticles.splice(i, 1); continue; }
+        sctx.save(); sctx.globalAlpha = p.life; sctx.translate(p.x, p.y); sctx.rotate(p.rot);
+        sctx.fillStyle = p.col; sctx.fillRect(-p.sz/2, -p.sz/2, p.sz, p.sz * 1.4);
+        sctx.restore();
+    }
+}
+
+/* ================= MAIN MENU SCREEN & CART ENTRANCE TRANSITION ================= */
 const menuCv = document.getElementById('menuArtCanvas'), mCtx = menuCv.getContext('2d');
 let menuAnimTick = 0, menuAnimFrameId = null;
 
@@ -2082,6 +2387,7 @@ function initMenuArt() {
 
 function startMenuArt() {
     if (menuAnimFrameId) cancelAnimationFrame(menuAnimFrameId);
+    isTransitioningIntoMine = false;
     function loop() {
         if (!document.getElementById('screen-home').classList.contains('active')) return;
         renderMenuArtLoop(); menuAnimFrameId = requestAnimationFrame(loop);
@@ -2129,6 +2435,7 @@ function renderMenuArtLoop() {
 
     mCtx.fillStyle = '#2d6a4f'; mCtx.beginPath(); mCtx.moveTo(0, 140); mCtx.lineTo(60, 95); mCtx.lineTo(160, 140);
     mCtx.lineTo(270, 90); mCtx.lineTo(390, 140); mCtx.fill();
+
     mCtx.fillStyle = '#4a2c1d'; mCtx.beginPath(); mCtx.moveTo(350, 150); mCtx.lineTo(370, 75); mCtx.lineTo(435, 28);
     mCtx.lineTo(580, 22); mCtx.lineTo(580, 215); mCtx.lineTo(350, 215); mCtx.closePath(); mCtx.fill();
 
@@ -2165,19 +2472,11 @@ function renderMenuArtLoop() {
     mCtx.fillStyle = '#2e7d32'; mCtx.beginPath(); mCtx.arc(-8, -62, 22, 0, Math.PI*2); mCtx.fill();
     mCtx.restore();
 
-    menuLeaves.forEach(lf => {
-        lf.y += lf.vy; lf.x += lf.vx + Math.sin(menuAnimTick + lf.y * 0.05) * 0.45; lf.rot += lf.vRot;
-        if (lf.y > 152) { lf.y = 75; lf.x = 55 + Math.random() * 85; }
-        mCtx.save(); mCtx.translate(lf.x, lf.y); mCtx.rotate(lf.rot);
-        mCtx.fillStyle = '#4caf50'; mCtx.beginPath(); mCtx.ellipse(0, 0, 4, 2, 0, 0, Math.PI*2); mCtx.fill();
-        mCtx.restore();
-    });
-
     const gGrad = mCtx.createLinearGradient(0, 142, 0, 215);
     gGrad.addColorStop(0, '#2ecc71'); gGrad.addColorStop(0.25, '#27ae60'); gGrad.addColorStop(1, '#5a3620');
     mCtx.fillStyle = gGrad; mCtx.fillRect(0, 142, 580, 73);
-    for (let rx = 20; rx < 540; rx += 25) { mCtx.fillStyle = '#4e342e'; mCtx.fillRect(rx, 148, 16, 9); }
-    mCtx.fillStyle = '#7f8c8d'; mCtx.fillRect(0, 145, 540, 5);
+    for (let rx = 20; rx < 570; rx += 25) { mCtx.fillStyle = '#4e342e'; mCtx.fillRect(rx, 148, 16, 9); }
+    mCtx.fillStyle = '#7f8c8d'; mCtx.fillRect(0, 145, 580, 5);
 
     mCtx.save();
     mCtx.translate(195, 148); mCtx.fillStyle = '#7f8c8d';
@@ -2189,16 +2488,31 @@ function renderMenuArtLoop() {
     mCtx.beginPath(); mCtx.arc(0, -26, 16, Math.PI * 0.8, Math.PI * 1.55); mCtx.stroke();
     mCtx.restore(); mCtx.restore();
 
-    const cartX = 320 + Math.sin(menuAnimTick * 0.8) * 18, cartY = 112;
-    const idleBob = Math.sin(menuAnimTick * 2.5) * 2, cartTilt = Math.cos(menuAnimTick * 0.8) * 0.035;
+    let cartBaseX = 320;
+    let cartX = cartBaseX + Math.sin(menuAnimTick * 0.8) * 18, cartY = 112;
+    let idleBob = Math.sin(menuAnimTick * 2.5) * 2, cartTilt = Math.cos(menuAnimTick * 0.8) * 0.035;
+    let wheelSpin = cartX * 0.15;
 
-    if (Math.random() < 0.25) {
-        menuCartDust.push({ x: cartX - 16 + (Math.random() - 0.5) * 8, y: cartY + 36, vx: (Math.random() - 0.5) * 0.8, vy: -0.4 - Math.random() * 0.5, size: 2.2 + Math.random() * 2.5, alpha: 0.65 });
+    if (isTransitioningIntoMine) {
+        transitionProgress += 0.024;
+        cartX = cartBaseX + (Math.pow(transitionProgress, 1.8) * 230);
+        cartTilt = -0.12;
+        idleBob = Math.sin(transitionProgress * 25) * 3;
+        wheelSpin = cartX * 0.85;
+
+        for (let s = 0; s < 3; s++) {
+            menuCartDust.push({
+                x: cartX - 22 + (Math.random() - 0.5) * 8, y: cartY + 36,
+                vx: -2.5 - Math.random() * 2.5, vy: -0.6 - Math.random() * 0.8,
+                size: 3 + Math.random() * 4, alpha: 0.8
+            });
+        }
     }
+
     for (let d = menuCartDust.length - 1; d >= 0; d--) {
-        const dp = menuCartDust[d]; dp.x += dp.vx; dp.y += dp.vy; dp.size += 0.08; dp.alpha -= 0.025;
+        const dp = menuCartDust[d]; dp.x += dp.vx; dp.y += dp.vy; dp.size += 0.1; dp.alpha -= 0.035;
         if (dp.alpha <= 0) { menuCartDust.splice(d, 1); continue; }
-        mCtx.save(); mCtx.fillStyle = `rgba(189, 195, 199, ${dp.alpha})`; mCtx.beginPath(); mCtx.arc(dp.x, dp.y, dp.size, 0, Math.PI * 2); mCtx.fill(); mCtx.restore();
+        mCtx.save(); mCtx.fillStyle = `rgba(200, 214, 229, ${dp.alpha})`; mCtx.beginPath(); mCtx.arc(dp.x, dp.y, dp.size, 0, Math.PI * 2); mCtx.fill(); mCtx.restore();
     }
 
     mCtx.save();
@@ -2210,20 +2524,24 @@ function renderMenuArtLoop() {
     mCtx.fillStyle = '#f1c40f'; mCtx.beginPath(); mCtx.arc(-14, 8 + goldBounce, 9, 0, Math.PI * 2); mCtx.arc(4, 7 + goldBounce, 8, 0, Math.PI * 2); mCtx.fill();
     mCtx.fillStyle = '#dcdde1'; mCtx.beginPath(); mCtx.arc(-4, 5 + goldBounce, 7, 0, Math.PI * 2); mCtx.arc(-22, 11 + goldBounce, 7, 0, Math.PI * 2); mCtx.fill();
 
-    const wheelRot = cartX * 0.15;
     [-18, 18].forEach(wx => {
-        mCtx.save(); mCtx.translate(wx, 36); mCtx.rotate(wheelRot);
+        mCtx.save(); mCtx.translate(wx, 36); mCtx.rotate(wheelSpin);
         mCtx.fillStyle = '#263238'; mCtx.beginPath(); mCtx.arc(0, 0, 8.5, 0, Math.PI * 2); mCtx.fill();
         mCtx.strokeStyle = '#95a5a6'; mCtx.lineWidth = 2;
         mCtx.beginPath(); mCtx.moveTo(-8, 0); mCtx.lineTo(8, 0); mCtx.moveTo(0, -8); mCtx.lineTo(0, 8); mCtx.stroke();
         mCtx.restore();
     });
 
-    const isMenuBlinking = (Math.sin(menuAnimTick * 0.6) > 0.95);
+    const isMenuBlinking = isTransitioningIntoMine ? false : (Math.sin(menuAnimTick * 0.6) > 0.95);
     mCtx.save();
-    mCtx.translate(-2, 4 + idleBob); drawBlook(mCtx, myAvatarBlook, 0, 0, 26, isMenuBlinking, idleBob * 0.3);
-    mCtx.translate(14, 2); mCtx.rotate(Math.sin(menuAnimTick * 5) * 0.25);
-    mCtx.fillStyle = '#ffffff'; mCtx.beginPath(); mCtx.arc(0, 0, 4, 0, Math.PI * 2); mCtx.fill();
+    mCtx.translate(-2, 4 + idleBob);
+    drawBlook(mCtx, myAvatarBlook, 0, 0, 26, isMenuBlinking, idleBob * 0.3);
+
+    if (isTransitioningIntoMine) {
+        mCtx.translate(14, -6);
+        mCtx.rotate(0.6);
+        mCtx.fillStyle = '#ffffff'; mCtx.beginPath(); mCtx.roundRect(0, 0, 10, 5, 2); mCtx.fill();
+    }
     mCtx.restore();
     mCtx.restore();
 
@@ -2236,6 +2554,25 @@ function renderMenuArtLoop() {
         mCtx.beginPath(); mCtx.arc(ff.x, ff.y, ff.radius, 0, Math.PI * 2); mCtx.fill();
         mCtx.restore();
     });
+
+    if (isTransitioningIntoMine) {
+        const tunnelFade = Math.min(1.0, Math.max(0, (transitionProgress - 0.45) * 2.2));
+        if (tunnelFade > 0) {
+            mCtx.save();
+            mCtx.fillStyle = `rgba(10, 5, 2, ${tunnelFade})`;
+            mCtx.fillRect(0, 0, 580, 215);
+
+            const irisR = Math.max(0, (1.0 - tunnelFade) * 350);
+            mCtx.globalCompositeOperation = 'destination-out';
+            mCtx.beginPath(); mCtx.arc(475, 125, irisR, 0, Math.PI * 2); mCtx.fill();
+            mCtx.restore();
+        }
+
+        if (transitionProgress >= 1.0) {
+            isTransitioningIntoMine = false;
+            startMode(transitionModeTarget);
+        }
+    }
 }
 
 window.addEventListener('load', () => {
